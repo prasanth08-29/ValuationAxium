@@ -211,6 +211,7 @@ export default function ValuationForm() {
     }, [templateId]);
 
     const handleSave = async (formData) => {
+        console.log("Submitting handleSave with data:", formData);
         setSaving(true);
         try {
             const payload = {
@@ -342,7 +343,11 @@ export default function ValuationForm() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit(handleSave)} className="space-y-8 bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+            <form onSubmit={handleSubmit(handleSave, (errors) => {
+                console.error("Form Validation Failed:", errors);
+                alert("Validation Failed. Please check all the correctly highlighted fields! Note: " + Object.keys(errors).join(', '));
+            })} className="space-y-8 bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+
 
                 {/* Dynamic Fields rendering by sections */}
                 <div className="space-y-10">
