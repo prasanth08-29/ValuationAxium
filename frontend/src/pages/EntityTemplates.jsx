@@ -115,19 +115,19 @@ export default function EntityTemplates() {
                                         onClick={async (e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            if (window.confirm(`Are you sure you want to remove the ${template.name} template from this entity?`)) {
+                                            if (window.confirm(`Are you sure you want to permanently delete the ${template.name} template?`)) {
                                                 try {
-                                                    const res = await fetch(`http://localhost:5000/api/templates/${template.id}/unlink`, { method: 'PATCH' });
+                                                    const res = await fetch(`http://localhost:5000/api/templates/${template.id}`, { method: 'DELETE' });
                                                     if (res.ok) {
                                                         setTemplates(templates.filter(t => t.id !== template.id));
                                                     }
                                                 } catch (err) {
-                                                    console.error('Failed to unlink template', err);
+                                                    console.error('Failed to delete template', err);
                                                 }
                                             }
                                         }}
                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg shadow-sm bg-white"
-                                        title="Remove template from entity"
+                                        title="Delete template permanently"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
