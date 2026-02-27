@@ -126,7 +126,6 @@ export default function Templates() {
         setFile(null);
         setFields(null);
         setError(null);
-        setSaveSuccess(false);
         setEditingTemplateId(null);
         setTemplateName('');
     };
@@ -191,7 +190,7 @@ export default function Templates() {
 
             const data = await response.json();
             if (data.success) {
-                setSaveSuccess(true);
+                showAlert('success', 'Success', 'Template saved successfully!');
                 fetchTemplates(); // Refresh the list
                 setEditingTemplateId(null); // Clear editing state after success
             } else {
@@ -313,10 +312,8 @@ export default function Templates() {
                                                         value={entityType}
                                                         onChange={(e) => {
                                                             setEntityType(e.target.value);
-                                                            setSaveSuccess(false);
                                                         }}
                                                         className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 outline-none transition-colors"
-                                                        disabled={saveSuccess}
                                                     >
                                                         <option value="bank">Bank</option>
                                                         <option value="vehicle">Vehicle</option>
@@ -331,24 +328,21 @@ export default function Templates() {
                                                         value={templateName}
                                                         onChange={(e) => {
                                                             setTemplateName(e.target.value);
-                                                            setSaveSuccess(false);
                                                         }}
                                                         placeholder="E.g., Bank Vehicle Valuation"
                                                         className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 outline-none transition-colors"
-                                                        disabled={saveSuccess}
                                                     />
                                                 </div>
                                             </div>
                                             <div className="flex flex-col sm:flex-row gap-3">
                                                 <button
                                                     onClick={handleSaveTemplate}
-                                                    disabled={saving || saveSuccess || !templateName.trim()}
-                                                    className={`flex-1 text-sm px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${saveSuccess ? 'bg-green-100 text-green-700 border border-green-200' :
-                                                        (saving || !templateName.trim() ? 'bg-primary-100 text-primary-400 cursor-not-allowed' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm')
+                                                    disabled={saving || !templateName.trim()}
+                                                    className={`w-full sm:w-auto text-sm px-6 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${(saving || !templateName.trim() ? 'bg-primary-100 text-primary-400 cursor-not-allowed' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm')
                                                         }`}
                                                 >
-                                                    {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : saveSuccess ? <CheckCircle className="w-4 h-4" /> : null}
-                                                    {saveSuccess ? 'Saved Successfully!' : 'Save Template'}
+                                                    {saving && <RefreshCw className="w-4 h-4 animate-spin" />}
+                                                    Save Template
                                                 </button>
 
                                                 {editingTemplateId && (
