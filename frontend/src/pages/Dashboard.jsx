@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Home as HomeIcon, Car, FilePlus2, ChevronRight, Clock, FileText } from 'lucide-react';
+import { Building2, Home as HomeIcon, Car, Briefcase, FilePlus2, ChevronRight, Clock, FileText } from 'lucide-react';
+import { useAlert } from '../context/AlertContext';
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const { showAlert } = useAlert();
 
     const templates = [
         { id: 'bank', title: 'Bank Property', description: 'Standard format for bank loans', icon: Building2, color: 'bg-blue-100 text-blue-600' },
         { id: 'individual', title: 'Individual Property', description: 'For private individuals', icon: HomeIcon, color: 'bg-green-100 text-green-600' },
-        { id: 'vehicle', title: 'Vehicle Valuation', description: 'Cars, trucks & commercial', icon: Car, color: 'bg-purple-100 text-purple-600' },
+        { id: 'vehicle', title: 'Vehicle Valuation', description: 'Cars, trucks & commercial', icon: Car, color: 'bg-amber-100 text-amber-600' },
+        { id: 'company', title: 'Company Assets', description: 'Corporate valuations for auditing, acquisitions and financial reporting.', icon: Briefcase, color: 'bg-purple-100 text-purple-600' },
     ];
 
     const [recentValuations, setRecentValuations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
+    const [availableTemplates, setAvailableTemplates] = useState([]);
+    const [selectedEntityId, setSelectedEntityId] = useState('');
 
     useEffect(() => {
         const fetchRecentActivity = async () => {
@@ -39,6 +45,29 @@ export default function Dashboard() {
         fetchRecentActivity();
     }, []);
 
+    const handleTemplateClick = async (entityId) => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/templates?entity=${entityId}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.length > 1) {
+                    setAvailableTemplates(data);
+                    setSelectedEntityId(entityId);
+                    setShowTemplateModal(true);
+                } else if (data.length === 1) {
+                    navigate(`/valuation/new/${data[0].id || data[0]._id}`);
+                } else {
+                    // Fallback to default
+                    showAlert('No Templates Found', 'No templates have been configured for this entity category yet. Please create one in the Entities or Templates tab.', 'error');
+                }
+            } else {
+                showAlert('No Templates Found', 'No templates have been configured for this entity category yet. Please create one in the Entities or Templates tab.', 'error');
+            }
+        } catch (error) {
+            showAlert('Error', 'Failed to load templates.', 'error');
+        }
+    };
+
     return (
         <div className="space-y-6 pb-20 md:pb-0">
             <header className="flex justify-between items-center mb-8">
@@ -51,11 +80,11 @@ export default function Dashboard() {
             {/* Templates Section */}
             <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Start New Valuation</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {templates.map((tpl) => (
                         <button
                             key={tpl.id}
-                            onClick={() => navigate(`/valuation/new/${tpl.id}`)}
+                            onClick={() => handleTemplateClick(tpl.id)}
                             className="text-left bg-white p-5 rounded-xl border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all group relative overflow-hidden"
                         >
                             <div className="flex items-start justify-between">
@@ -133,6 +162,41 @@ export default function Dashboard() {
                     )}
                 </div>
             </div>
+
+            {/* Template Selection Modal */}
+            {showTemplateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                            <h3 className="font-bold text-gray-900">Select a Template</h3>
+                            <button
+                                onClick={() => setShowTemplateModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="p-6 max-h-[60vh] overflow-y-auto space-y-3">
+                            <p className="text-sm text-gray-500 mb-4">You have multiple templates for this category. Please select which one to base your valuation on:</p>
+                            {availableTemplates.map(t => (
+                                <button
+                                    key={t.id || t._id}
+                                    onClick={() => navigate(`/valuation/new/${t.id || t._id}`)}
+                                    className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all flex items-center gap-3 group"
+                                >
+                                    <div className="bg-primary-100 text-primary-600 p-2 rounded-lg group-hover:bg-primary-200">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-900">{t.name}</h4>
+                                        <p className="text-xs text-gray-500">{t.fields?.length || 0} fields configured</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

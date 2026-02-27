@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Plus, Calendar, AlertCircle, Trash2 } from 'lucide-react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, FileText, Plus, Calendar, AlertCircle, Trash2, Copy, X } from 'lucide-react';
+import { useAlert } from '../context/AlertContext';
 
 const ENTITY_DETAILS = {
     bank: { title: 'Bank Valuations', color: 'blue' },
@@ -11,9 +12,14 @@ const ENTITY_DETAILS = {
 
 export default function EntityTemplates() {
     const { entityType } = useParams();
+    const navigate = useNavigate();
     const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [allTemplates, setAllTemplates] = useState([]);
+    const [importingError, setImportingError] = useState('');
+    const { showAlert, showConfirm } = useAlert();
 
     const entityInfo = ENTITY_DETAILS[entityType] || { title: 'Valuations', color: 'gray' };
 
@@ -32,7 +38,48 @@ export default function EntityTemplates() {
         };
 
         fetchTemplates();
+        fetchAllTemplates();
     }, [entityType]);
+
+    const fetchAllTemplates = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/templates');
+            if (response.ok) {
+                const data = await response.json();
+                setAllTemplates(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch all templates', err);
+        }
+    };
+
+    const importTemplate = async (templateId) => {
+        const sourceTemplate = allTemplates.find(t => t.id === templateId);
+        if (!sourceTemplate) return;
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/templates/${templateId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: sourceTemplate.name,
+                    entity: entityType,
+                    fields: sourceTemplate.fields
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const updatedTemplate = data.template || data;
+                setTemplates([...templates, updatedTemplate]);
+                setAllTemplates(allTemplates.filter(t => t.id !== templateId));
+                setShowImportModal(false);
+            } else {
+                setImportingError('Failed to import template.');
+            }
+        } catch (err) {
+            setImportingError('Error connecting to server.');
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -47,13 +94,23 @@ export default function EntityTemplates() {
                     </div>
                 </div>
 
-                <Link
-                    to="/templates"
-                    className="flex items-center gap-2 bg-primary-600 text-white hover:bg-primary-700 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm"
-                >
-                    <Plus className="w-4 h-4" />
-                    Add Template
-                </Link>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowImportModal(true)}
+                        className="flex items-center gap-2 bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm"
+                    >
+                        <Copy className="w-4 h-4 text-gray-400" />
+                        Import Template
+                    </button>
+                    <Link
+                        to="/templates"
+                        state={{ entityType }}
+                        className="flex items-center gap-2 bg-primary-600 text-white hover:bg-primary-700 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Create New
+                    </Link>
+                </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 object-contain">
@@ -112,19 +169,26 @@ export default function EntityTemplates() {
 
                                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all z-50">
                                     <button
-                                        onClick={async (e) => {
+                                        onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
-                                            if (window.confirm(`Are you sure you want to permanently delete the ${template.name} template?`)) {
-                                                try {
-                                                    const res = await fetch(`http://localhost:5000/api/templates/${template.id}`, { method: 'DELETE' });
-                                                    if (res.ok) {
-                                                        setTemplates(templates.filter(t => t.id !== template.id));
+                                            showConfirm(
+                                                'Delete Template',
+                                                `Are you sure you want to permanently delete the ${template.name} template?`,
+                                                async () => {
+                                                    try {
+                                                        const res = await fetch(`http://localhost:5000/api/templates/${template.id}`, { method: 'DELETE' });
+                                                        if (res.ok) {
+                                                            setTemplates(templates.filter(t => t.id !== template.id));
+                                                            showAlert('Success', 'Template deleted successfully', 'success');
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('Failed to delete template', err);
+                                                        showAlert('Error', 'Failed to delete template', 'error');
                                                     }
-                                                } catch (err) {
-                                                    console.error('Failed to delete template', err);
-                                                }
-                                            }
+                                                },
+                                                'Delete'
+                                            );
                                         }}
                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg shadow-sm bg-white"
                                         title="Delete template permanently"
@@ -137,6 +201,51 @@ export default function EntityTemplates() {
                     </div>
                 )}
             </div>
+
+            {/* Import Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-lg">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-900">Import Template</h2>
+                            <button onClick={() => setShowImportModal(false)} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg bg-gray-50 hover:bg-gray-100">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {importingError && (
+                            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl flex items-start gap-2 text-sm border border-red-100">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                <p>{importingError}</p>
+                            </div>
+                        )}
+
+                        <p className="text-gray-600 mb-4 text-sm">Select a template from main templates to copy into this entity:</p>
+
+                        <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {allTemplates.filter(t => t.entity !== entityType).length === 0 ? (
+                                <p className="text-gray-500 text-center col-span-2 py-8">No templates available to import from other entities.</p>
+                            ) : (
+                                allTemplates.filter(t => t.entity !== entityType).map(t => (
+                                    <div key={t.id} className="border border-gray-200 rounded-xl p-4 hover:border-primary-300 transition-colors flex flex-col cursor-pointer bg-gray-50 hover:bg-primary-50">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-xs font-semibold uppercase tracking-wider text-primary-600 bg-primary-100 px-2 py-0.5 rounded-md">{t.entity}</span>
+                                            <span className="text-xs text-gray-500">{t.fields?.length || 0} fields</span>
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 text-sm mb-4 truncate">{t.name}</h3>
+                                        <button
+                                            onClick={() => importTemplate(t.id)}
+                                            className="mt-auto w-full py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold hover:border-primary-500 hover:text-primary-600 transition-colors"
+                                        >
+                                            Import to {entityInfo.title}
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

@@ -254,7 +254,7 @@ app.post('/api/reports', authenticate, async (req, res) => {
             entity: entity || 'General',
             template: template || 'Default',
             date: date || new Date().toISOString().split('T')[0],
-            status: 'Completed',
+            status: req.body.status || 'Completed',
             value: value || 'TBD',
             data: data || {},
             sections: sections || [],
@@ -295,6 +295,39 @@ app.get('/api/reports', authenticate, async (req, res) => {
     } catch (err) {
         console.error('Error reading reports:', err);
         res.status(500).json({ error: 'Failed to read reports' });
+    }
+});
+
+app.get('/api/reports/:id', authenticate, async (req, res) => {
+    try {
+        const report = await Report.findOne({ _id: req.params.id, userId: req.user.role === 'admin' ? { $exists: true } : req.user.id });
+        if (!report) return res.status(404).json({ error: 'Report not found' });
+
+        // Map _id and include id for frontend
+        const reportObj = report.toObject();
+        reportObj.id = reportObj._id;
+        res.json(reportObj);
+    } catch (err) {
+        console.error('Error fetching report:', err);
+        res.status(500).json({ error: 'Failed to fetch report' });
+    }
+});
+
+app.put('/api/reports/:id', authenticate, async (req, res) => {
+    try {
+        const { title, date, value, data, sections, status } = req.body;
+
+        const report = await Report.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.role === 'admin' ? { $exists: true } : req.user.id },
+            { title, date, value, data, sections, status },
+            { new: true }
+        );
+
+        if (!report) return res.status(404).json({ error: 'Report not found' });
+        res.json({ success: true, report });
+    } catch (err) {
+        console.error('Error updating report:', err);
+        res.status(500).json({ error: 'Failed to update report' });
     }
 });
 

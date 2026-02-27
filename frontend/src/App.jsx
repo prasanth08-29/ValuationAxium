@@ -7,27 +7,30 @@ import Entities from './pages/Entities';
 import EntityTemplates from './pages/EntityTemplates';
 import Reports from './pages/Reports';
 import Layout from './components/Layout';
+import { AlertProvider } from './context/AlertContext';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
 
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <AlertProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-        {/* Protected Routes */}
-        <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="entities" element={<Entities />} />
-          <Route path="entities/:entityType" element={<EntityTemplates />} />
-          <Route path="templates" element={<Templates />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="valuation/new/:templateId" element={<ValuationForm />} />
-          <Route path="valuation/:id" element={<ValuationForm />} />
-        </Route>
-      </Routes>
+          {/* Protected Routes */}
+          <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="entities" element={<Entities />} />
+            <Route path="entities/:entityType" element={<EntityTemplates />} />
+            <Route path="templates" element={<Templates />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="valuation/new/:templateId" element={<ValuationForm />} />
+            <Route path="valuation/:id" element={<ValuationForm />} />
+          </Route>
+        </Routes>
+      </AlertProvider>
     </Router>
   );
 }

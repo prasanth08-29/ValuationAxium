@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
-import { UploadCloud, File, CheckCircle, AlertCircle, RefreshCw, Trash2, Edit2, Plus, GripVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FileUp, FileText, CheckCircle2, AlertCircle, RefreshCw, X, Folder, Eye, Settings, Copy, Edit2, Trash2, UploadCloud, File, CheckCircle, Plus, GripVertical } from 'lucide-react';
+import { useAlert } from '../context/AlertContext';
 
 export default function Templates() {
     const [file, setFile] = useState(null);
@@ -7,13 +9,15 @@ export default function Templates() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [fields, setFields] = useState(null);
+    const location = useLocation();
     const [templateName, setTemplateName] = useState('');
-    const [entityType, setEntityType] = useState('bank');
+    const [entityType, setEntityType] = useState(location.state?.entityType || 'bank');
     const [saving, setSaving] = useState(false);
     const [templates, setTemplates] = useState([]);
     const [loadingTemplates, setLoadingTemplates] = useState(true);
-    const [saveSuccess, setSaveSuccess] = useState(false);
+    const [editMode, setEditMode] = useState(false);
     const [editingTemplateId, setEditingTemplateId] = useState(null);
+    const { showAlert, showConfirm } = useAlert();
     const fileInputRef = useRef(null);
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
@@ -487,18 +491,25 @@ export default function Templates() {
                                         <Edit2 className="w-4 h-4" />
                                     </button>
                                     <button
-                                        onClick={async (e) => {
+                                        onClick={(e) => {
                                             e.preventDefault();
-                                            if (window.confirm('Are you sure you want to remove this template?')) {
-                                                try {
-                                                    const res = await fetch(`http://localhost:5000/api/templates/${template.id}`, { method: 'DELETE' });
-                                                    if (res.ok) {
-                                                        setTemplates(templates.filter(t => t.id !== template.id));
+                                            showConfirm(
+                                                'Remove Template',
+                                                'Are you sure you want to remove this template?',
+                                                async () => {
+                                                    try {
+                                                        const res = await fetch(`http://localhost:5000/api/templates/${template.id}`, { method: 'DELETE' });
+                                                        if (res.ok) {
+                                                            setTemplates(templates.filter(t => t.id !== template.id));
+                                                            showAlert('Success', 'Template removed successfully', 'success');
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('Failed to delete template', err);
+                                                        showAlert('Error', 'Failed to remove template', 'error');
                                                     }
-                                                } catch (err) {
-                                                    console.error('Failed to delete template', err);
-                                                }
-                                            }
+                                                },
+                                                'Remove'
+                                            );
                                         }}
                                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
                                         title="Remove template"
