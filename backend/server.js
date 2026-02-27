@@ -138,11 +138,22 @@ app.post('/api/templates/upload', upload.single('file'), async (req, res) => {
         }
 
         const fields = Array.from(extractedSet).map(fieldName => {
+            const lowerLabel = fieldName.toLowerCase();
+            let fieldType = 'text';
+
+            if (lowerLabel.includes('date') || lowerLabel.includes('year') || lowerLabel.includes('dob')) {
+                fieldType = 'date';
+            } else if (lowerLabel.includes('value') || lowerLabel.includes('amount') || lowerLabel.includes('price') || lowerLabel.includes('cost') || lowerLabel.includes('rate') || lowerLabel.includes('pincode')) {
+                fieldType = 'number';
+            } else if (lowerLabel.includes('address') || lowerLabel.includes('remarks') || lowerLabel.includes('details') || lowerLabel.includes('description') || lowerLabel.includes('notes') || lowerLabel.includes('location')) {
+                fieldType = 'textarea';
+            }
+
             return {
                 id: fieldName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60),
                 label: fieldName.substring(0, 150),
-                type: 'text',
-                placeholder: `Enter ${fieldName.substring(0, 40)}...`
+                type: fieldType,
+                placeholder: fieldType === 'date' ? 'Select Date...' : `Enter ${fieldName.substring(0, 40)}...`
             };
         });
 
