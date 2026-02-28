@@ -17,6 +17,7 @@ export default function Templates() {
     const [loadingTemplates, setLoadingTemplates] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [editingTemplateId, setEditingTemplateId] = useState(null);
+    const [activeEditIndex, setActiveEditIndex] = useState(null);
     const { showAlert, showConfirm } = useAlert();
     const fileInputRef = useRef(null);
     const dragItem = useRef(null);
@@ -377,75 +378,99 @@ export default function Templates() {
                                                 onDragEnter={(e) => dragOverItem.current = index}
                                                 onDragEnd={handleSort}
                                                 onDragOver={(e) => e.preventDefault()}
-                                                className="group bg-white border border-gray-200 rounded-2xl p-4 hover:border-primary-400 hover:shadow-md transition-all duration-200"
+                                                className={`group bg-white border ${activeEditIndex === index ? 'border-primary-400 shadow-md ring-4 ring-primary-50' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'} rounded-2xl p-4 transition-all duration-200`}
                                             >
-                                                <div className="flex items-start sm:items-center gap-2 sm:gap-4">
-                                                    <div className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-1 mt-6 sm:mt-0 transition-colors">
-                                                        <GripVertical className="w-5 h-5" />
-                                                    </div>
-
-                                                    <div className="flex-1 flex flex-col sm:flex-row gap-4">
-                                                        <div className="flex-1 relative">
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field Label</label>
-                                                            <input
-                                                                type="text"
-                                                                value={field.label}
-                                                                onChange={(e) => handleUpdateField(index, 'label', e.target.value)}
-                                                                className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
-                                                            />
+                                                {activeEditIndex === index ? (
+                                                    <div className="flex items-start sm:items-center gap-2 sm:gap-4">
+                                                        <div className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-1 mt-6 sm:mt-0 transition-colors">
+                                                            <GripVertical className="w-5 h-5" />
                                                         </div>
-                                                        <div className="w-full sm:w-48 relative">
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Input Type</label>
-                                                            <div className="relative">
-                                                                <select
-                                                                    value={field.type || 'text'}
-                                                                    onChange={(e) => handleUpdateField(index, 'type', e.target.value)}
-                                                                    className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
-                                                                >
-                                                                    <option value="text">Text / Short</option>
-                                                                    <option value="textarea">Text / Long</option>
-                                                                    <option value="number">Number</option>
-                                                                    <option value="date">Date picker</option>
-                                                                    <option value="select">Dropdown</option>
-                                                                    <option value="button">Button Action</option>
-                                                                </select>
-                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+
+                                                        <div className="flex-1 flex flex-col sm:flex-row gap-4">
+                                                            <div className="flex-1 relative">
+                                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field Label</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={field.label}
+                                                                    onChange={(e) => handleUpdateField(index, 'label', e.target.value)}
+                                                                    className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                            <div className="w-full sm:w-48 relative">
+                                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Input Type</label>
+                                                                <div className="relative">
+                                                                    <select
+                                                                        value={field.type || 'text'}
+                                                                        onChange={(e) => handleUpdateField(index, 'type', e.target.value)}
+                                                                        className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
+                                                                    >
+                                                                        <option value="text">Text / Short</option>
+                                                                        <option value="textarea">Text / Long</option>
+                                                                        <option value="number">Number</option>
+                                                                        <option value="date">Date picker</option>
+                                                                        <option value="select">Dropdown</option>
+                                                                        <option value="button">Button Action</option>
+                                                                    </select>
+                                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
+
+                                                        <button onClick={() => setActiveEditIndex(null)} className="p-2 sm:mt-5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Done Editing">
+                                                            <CheckCircle2 className="w-6 h-6" />
+                                                        </button>
+
                                                     </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveEditIndex(index)}>
+                                                        <div className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-1 transition-colors" onClick={(e) => e.stopPropagation()}>
+                                                            <GripVertical className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 pr-4">
+                                                            <h3 className="text-sm font-semibold text-gray-900 truncate">{field.label || 'Unnamed Field'}</h3>
+                                                            <p className="text-xs text-gray-500 mt-0.5 capitalize">{field.type === 'textarea' ? 'Text / Long' : field.type === 'text' ? 'Text / Short' : field.type || 'Text / Short'}</p>
+                                                        </div>
+                                                        <button onClick={(e) => { e.stopPropagation(); setActiveEditIndex(index); }} className="p-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all" title="Edit Field">
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleRemoveField(index); }} className="p-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Remove Field">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
 
-                                                    <button onClick={() => handleRemoveField(index)} className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors mt-5 sm:mt-0" title="Remove Field">
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-
-                                                {field.type === 'select' && (
-                                                    <div className="w-full space-y-1 mt-2">
-                                                        <label className="text-xs font-semibold text-gray-700 uppercase">Options (Comma separated)</label>
+                                                {activeEditIndex === index && field.type === 'select' && (
+                                                    <div className="w-full space-y-1 mt-4 pl-8 sm:pl-11">
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Options (Comma separated)</label>
                                                         <input
                                                             type="text"
                                                             value={field.options ? field.options.join(', ') : ''}
                                                             onChange={(e) => handleUpdateField(index, 'options', e.target.value.split(',').map(s => s.trim()))}
                                                             placeholder="Option 1, Option 2, Option 3"
-                                                            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none"
+                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
                                                         />
                                                     </div>
                                                 )}
 
-                                                {field.type === 'button' && (
-                                                    <div className="w-full space-y-1 mt-2">
-                                                        <label className="text-xs font-semibold text-gray-700 uppercase">Button Action</label>
-                                                        <select
-                                                            value={field.buttonType || 'button'}
-                                                            onChange={(e) => handleUpdateField(index, 'buttonType', e.target.value)}
-                                                            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none"
-                                                        >
-                                                            <option value="button">Normal Button</option>
-                                                            <option value="submit">Submit Form</option>
-                                                            <option value="reset">Reset Form</option>
-                                                        </select>
+                                                {activeEditIndex === index && field.type === 'button' && (
+                                                    <div className="w-full space-y-1 mt-4 pl-8 sm:pl-11 relative">
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Button Action</label>
+                                                        <div className="relative">
+                                                            <select
+                                                                value={field.buttonType || 'button'}
+                                                                onChange={(e) => handleUpdateField(index, 'buttonType', e.target.value)}
+                                                                className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
+                                                            >
+                                                                <option value="button">Normal Button</option>
+                                                                <option value="submit">Submit Form</option>
+                                                                <option value="reset">Reset Form</option>
+                                                            </select>
+                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
