@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FileUp, FileText, CheckCircle2, AlertCircle, RefreshCw, X, Folder, Eye, Settings, Copy, Edit2, Trash2, UploadCloud, File, CheckCircle, Plus, GripVertical } from 'lucide-react';
+import { FileUp, FileText, CheckCircle2, AlertCircle, RefreshCw, X, Folder, Eye, Settings, Copy, Edit2, Trash2, UploadCloud, File, CheckCircle, Plus, GripVertical, Save } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
 
 export default function Templates() {
@@ -298,50 +298,62 @@ export default function Templates() {
                         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                             {fields.length > 0 ? (
                                 <div className="space-y-4">
-                                    <div className="space-y-4 mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                        <div className="flex justify-between items-center">
-                                            <p className="text-sm text-gray-600 font-medium">
-                                                Found <span className="text-primary-600 font-bold">{fields.length}</span> potential fields.
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-col gap-3">
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Entity Type</label>
-                                                    <select
-                                                        value={entityType}
-                                                        onChange={(e) => {
-                                                            setEntityType(e.target.value);
-                                                        }}
-                                                        className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 outline-none transition-colors"
-                                                    >
-                                                        <option value="bank">Bank</option>
-                                                        <option value="vehicle">Vehicle</option>
-                                                        <option value="individual">Individual</option>
-                                                        <option value="company">Company</option>
-                                                    </select>
+                                    <div className="space-y-5 mb-8 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                                        <div className="flex justify-between items-center bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
+                                                    <CheckCircle className="w-5 h-5 flex-shrink-0" />
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Template Name</label>
+                                                <p className="text-sm text-gray-700 font-medium">
+                                                    Found <span className="text-primary-600 font-bold text-base px-1">{fields.length}</span> potential fields
+                                                </p>
+                                            </div>
+
+                                        </div>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="relative">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Entity Type</label>
+                                                    <div className="relative">
+                                                        <select
+                                                            value={entityType}
+                                                            onChange={(e) => {
+                                                                setEntityType(e.target.value);
+                                                            }}
+                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3.5 outline-none transition-all cursor-pointer appearance-none shadow-sm"
+                                                        >
+                                                            <option value="bank">Bank Valuations</option>
+                                                            <option value="vehicle">Vehicle Valuations</option>
+                                                            <option value="individual">Individual Properties</option>
+                                                            <option value="company">Company Assets</option>
+                                                        </select>
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="relative">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Template Name</label>
                                                     <input
                                                         type="text"
                                                         value={templateName}
                                                         onChange={(e) => {
                                                             setTemplateName(e.target.value);
                                                         }}
-                                                        placeholder="E.g., Bank Vehicle Valuation"
-                                                        className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2.5 outline-none transition-colors"
+                                                        placeholder="e.g., Bank Vehicle Valuation"
+                                                        className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3.5 outline-none transition-all shadow-sm"
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col sm:flex-row gap-3">
+                                            <div className="flex flex-col sm:flex-row gap-3 mt-2">
                                                 <button
                                                     onClick={handleSaveTemplate}
                                                     disabled={saving || !templateName.trim()}
-                                                    className={`w-full sm:w-auto text-sm px-6 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${(saving || !templateName.trim() ? 'bg-primary-100 text-primary-400 cursor-not-allowed' : 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm')
+                                                    className={`w-full sm:w-auto text-sm px-8 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${(saving || !templateName.trim() ? 'bg-primary-50 text-primary-300 border border-primary-100 cursor-not-allowed' : 'bg-primary-600 text-white hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-500/30 border border-transparent')
                                                         }`}
                                                 >
-                                                    {saving && <RefreshCw className="w-4 h-4 animate-spin" />}
+                                                    {saving && <RefreshCw className="w-5 h-5 animate-spin" />}
+                                                    <Save className="w-5 h-5" />
                                                     Save Template
                                                 </button>
 
@@ -365,39 +377,44 @@ export default function Templates() {
                                                 onDragEnter={(e) => dragOverItem.current = index}
                                                 onDragEnd={handleSort}
                                                 onDragOver={(e) => e.preventDefault()}
-                                                className="space-y-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-primary-300 transition-colors group relative shadow-sm cursor-move"
+                                                className="group relative bg-white border border-gray-200 rounded-2xl p-5 hover:border-primary-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-move"
                                             >
-                                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                                                    <GripVertical className="w-4 h-4 text-gray-400" />
-                                                    <button onClick={() => handleRemoveField(index)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Remove Field">
+                                                <div className="absolute top-1/2 -left-3 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-gray-200 rounded-full p-1 shadow-sm text-gray-400">
+                                                    <GripVertical className="w-4 h-4" />
+                                                </div>
+                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => handleRemoveField(index)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Remove Field">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
 
-                                                <div className="flex gap-4">
-                                                    <div className="flex-1 space-y-1">
-                                                        <label className="text-xs font-semibold text-gray-700 uppercase">Field Label</label>
+                                                <div className="flex flex-col sm:flex-row gap-4">
+                                                    <div className="flex-1 relative">
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field Label</label>
                                                         <input
                                                             type="text"
                                                             value={field.label}
                                                             onChange={(e) => handleUpdateField(index, 'label', e.target.value)}
-                                                            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none"
+                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
                                                         />
                                                     </div>
-                                                    <div className="w-1/3 space-y-1">
-                                                        <label className="text-xs font-semibold text-gray-700 uppercase">Input Type</label>
+                                                    <div className="w-full sm:w-48 relative">
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Input Type</label>
                                                         <select
                                                             value={field.type || 'text'}
                                                             onChange={(e) => handleUpdateField(index, 'type', e.target.value)}
-                                                            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none"
+                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
                                                         >
                                                             <option value="text">Text / Short</option>
-                                                            <option value="textarea">Textarea / Long</option>
+                                                            <option value="textarea">Text / Long</option>
                                                             <option value="number">Number</option>
-                                                            <option value="date">Date</option>
+                                                            <option value="date">Date picker</option>
                                                             <option value="select">Dropdown</option>
-                                                            <option value="button">Button</option>
+                                                            <option value="button">Button Action</option>
                                                         </select>
+                                                        <div className="absolute right-3 bottom-3 pointer-events-none">
+                                                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                        </div>
                                                     </div>
                                                 </div>
 
