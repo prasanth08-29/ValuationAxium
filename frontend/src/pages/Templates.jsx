@@ -208,9 +208,9 @@ export default function Templates() {
             <h1 className="text-2xl font-bold text-gray-900">Template Manager</h1>
             <p className="text-gray-600">Upload a Word document (.docx) to automatically extract and generate form fields.</p>
 
-            <div className={`grid grid-cols-1 ${!editingTemplateId ? 'lg:grid-cols-2' : ''} gap-8`}>
+            <div className={`grid grid-cols-1 ${(!editingTemplateId && !fields) ? 'lg:grid-cols-2' : ''} gap-8`}>
                 {/* Upload Section */}
-                {!editingTemplateId && (
+                {!editingTemplateId && !fields && (
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4">Upload Template</h2>
 
@@ -357,12 +357,12 @@ export default function Templates() {
                                                     Save Template
                                                 </button>
 
-                                                {editingTemplateId && (
+                                                {(editingTemplateId || fields) && (
                                                     <button
                                                         onClick={handleClear}
-                                                        className="text-sm px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                        className="text-sm px-4 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-transparent hover:border-gray-300"
                                                     >
-                                                        Cancel Editing
+                                                        {editingTemplateId ? "Cancel Editing" : "Cancel & Reselect"}
                                                     </button>
                                                 )}
                                             </div>
@@ -377,45 +377,48 @@ export default function Templates() {
                                                 onDragEnter={(e) => dragOverItem.current = index}
                                                 onDragEnd={handleSort}
                                                 onDragOver={(e) => e.preventDefault()}
-                                                className="group relative bg-white border border-gray-200 rounded-2xl p-5 hover:border-primary-400 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-move"
+                                                className="group bg-white border border-gray-200 rounded-2xl p-4 hover:border-primary-400 hover:shadow-md transition-all duration-200"
                                             >
-                                                <div className="absolute top-1/2 -left-3 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-gray-200 rounded-full p-1 shadow-sm text-gray-400">
-                                                    <GripVertical className="w-4 h-4" />
-                                                </div>
-                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleRemoveField(index)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Remove Field">
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex flex-col sm:flex-row gap-4">
-                                                    <div className="flex-1 relative">
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field Label</label>
-                                                        <input
-                                                            type="text"
-                                                            value={field.label}
-                                                            onChange={(e) => handleUpdateField(index, 'label', e.target.value)}
-                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
-                                                        />
+                                                <div className="flex items-start sm:items-center gap-2 sm:gap-4">
+                                                    <div className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-1 mt-6 sm:mt-0 transition-colors">
+                                                        <GripVertical className="w-5 h-5" />
                                                     </div>
-                                                    <div className="w-full sm:w-48 relative">
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Input Type</label>
-                                                        <select
-                                                            value={field.type || 'text'}
-                                                            onChange={(e) => handleUpdateField(index, 'type', e.target.value)}
-                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
-                                                        >
-                                                            <option value="text">Text / Short</option>
-                                                            <option value="textarea">Text / Long</option>
-                                                            <option value="number">Number</option>
-                                                            <option value="date">Date picker</option>
-                                                            <option value="select">Dropdown</option>
-                                                            <option value="button">Button Action</option>
-                                                        </select>
-                                                        <div className="absolute right-3 bottom-3 pointer-events-none">
-                                                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+
+                                                    <div className="flex-1 flex flex-col sm:flex-row gap-4">
+                                                        <div className="flex-1 relative">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field Label</label>
+                                                            <input
+                                                                type="text"
+                                                                value={field.label}
+                                                                onChange={(e) => handleUpdateField(index, 'label', e.target.value)}
+                                                                className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                        <div className="w-full sm:w-48 relative">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Input Type</label>
+                                                            <div className="relative">
+                                                                <select
+                                                                    value={field.type || 'text'}
+                                                                    onChange={(e) => handleUpdateField(index, 'type', e.target.value)}
+                                                                    className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
+                                                                >
+                                                                    <option value="text">Text / Short</option>
+                                                                    <option value="textarea">Text / Long</option>
+                                                                    <option value="number">Number</option>
+                                                                    <option value="date">Date picker</option>
+                                                                    <option value="select">Dropdown</option>
+                                                                    <option value="button">Button Action</option>
+                                                                </select>
+                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
+
+                                                    <button onClick={() => handleRemoveField(index)} className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors mt-5 sm:mt-0" title="Remove Field">
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
                                                 </div>
 
                                                 {field.type === 'select' && (
