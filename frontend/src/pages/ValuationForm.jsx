@@ -24,7 +24,7 @@ export default function ValuationForm() {
         const shape = {};
         template.sections.forEach(sec => {
             sec.fields?.forEach(field => {
-                if (field.type !== 'button') {
+                if (field.type !== 'button' && field.type !== 'heading') {
                     // Make explicitly required ones string with min(1)
                     if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
                         shape[field.id] = z.string().min(1, `${field.label || field.id} is required`);
@@ -284,12 +284,16 @@ export default function ValuationForm() {
                             <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">{section.title}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {section.fields.map(field => (
-                                    <div key={field.id} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            {field.label} {field.required && <span className="text-red-500">*</span>}
-                                        </label>
+                                    <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading') ? 'md:col-span-2' : ''}>
+                                        {field.type !== 'heading' && (
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                {field.label} {field.required && <span className="text-red-500">*</span>}
+                                            </label>
+                                        )}
 
-                                        {field.type === 'textarea' ? (
+                                        {field.type === 'heading' ? (
+                                            <h4 className="text-base font-bold text-gray-800 border-b border-gray-200 pb-2 mt-4 mb-2">{field.label}</h4>
+                                        ) : field.type === 'textarea' ? (
                                             <textarea
                                                 className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
                                                 {...register(field.id)}

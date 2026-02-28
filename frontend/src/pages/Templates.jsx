@@ -409,6 +409,7 @@ export default function Templates() {
                                                                         <option value="number">Number</option>
                                                                         <option value="date">Date picker</option>
                                                                         <option value="select">Dropdown</option>
+                                                                        <option value="heading">Section Heading</option>
                                                                         <option value="button">Button Action</option>
                                                                     </select>
                                                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
