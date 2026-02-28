@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Camera, CheckCircle2, Download, AlertCircle } from 'lucide-react';
+import { Save, ArrowLeft, Camera, CheckCircle2, Download, AlertCircle, UploadCloud, Image as ImageIcon, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +16,7 @@ export default function ValuationForm() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [reportStatus, setReportStatus] = useState('Draft');
+    const [photos, setPhotos] = useState([]);
 
     const { showAlert } = useAlert();
 
@@ -68,6 +69,9 @@ export default function ValuationForm() {
 
                     // Populate the form fields with the saved data
                     reset(reportData.data);
+                    if (reportData.data.photos) {
+                        setPhotos(reportData.data.photos);
+                    }
                 } catch (err) {
                     setError(err.message);
                 } finally {
@@ -124,7 +128,7 @@ export default function ValuationForm() {
                 template: template.title,
                 date: formData['date'] || formData['inspection_date'] || new Date().toISOString().split('T')[0],
                 value: formData['ov_total_value'] || formData['summary_market_value'] || 'TBD',
-                data: formData,
+                data: { ...formData, photos: photos },
                 status: statusParam,
                 sections: template.sections
             };
@@ -343,16 +347,87 @@ export default function ValuationForm() {
                     )) : null}
                 </div>
 
-                {/* Media / Photos Section (Mockup) */}
+                {/* Media / Photos Section */}
                 <div className="border-t border-gray-100 pt-6 mt-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">Inspection Media</h3>
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 hover:border-primary-400 transition-colors cursor-pointer group">
-                        <div className="bg-primary-50 p-4 rounded-full inline-block group-hover:scale-110 transition-transform mb-3">
-                            <Camera className="w-8 h-8 text-primary-500" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-700">Tap to cross-launch camera or upload photos</p>
-                        <p className="text-xs text-gray-500 mt-1">Supports highly optimized offline caching</p>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <ImageIcon className="w-5 h-5 text-primary-500" />
+                        Inspection Media
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <label className="border-2 border-dashed border-primary-200 rounded-xl p-6 text-center hover:bg-primary-50 transition-colors cursor-pointer group flex flex-col items-center justify-center">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const files = Array.from(e.target.files);
+                                    const base64Photos = await Promise.all(files.map(file => {
+                                        return new Promise((resolve) => {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => resolve(reader.result);
+                                            reader.readAsDataURL(file);
+                                        });
+                                    }));
+                                    setPhotos(prev => [...prev, ...base64Photos]);
+                                }}
+                            />
+                            <div className="bg-white p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform mb-3">
+                                <UploadCloud className="w-6 h-6 text-primary-500" />
+                            </div>
+                            <p className="text-sm font-semibold text-gray-800">Upload Photos</p>
+                            <p className="text-xs text-gray-500 mt-1">Browse from gallery</p>
+                        </label>
+
+                        <label className="border-2 border-dashed border-green-200 rounded-xl p-6 text-center hover:bg-green-50 transition-colors cursor-pointer group flex flex-col items-center justify-center">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                multiple
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const files = Array.from(e.target.files);
+                                    const base64Photos = await Promise.all(files.map(file => {
+                                        return new Promise((resolve) => {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => resolve(reader.result);
+                                            reader.readAsDataURL(file);
+                                        });
+                                    }));
+                                    setPhotos(prev => [...prev, ...base64Photos]);
+                                }}
+                            />
+                            <div className="bg-white p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform mb-3">
+                                <Camera className="w-6 h-6 text-green-500" />
+                            </div>
+                            <p className="text-sm font-semibold text-gray-800">Take Photo</p>
+                            <p className="text-xs text-gray-500 mt-1">Use device camera</p>
+                        </label>
                     </div>
+
+                    {photos.length > 0 && (
+                        <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3 block">Attached Photos ({photos.length})</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {photos.map((photo, idx) => (
+                                    <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
+                                        <img src={photo} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPhotos(photos.filter((_, i) => i !== idx))}
+                                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Floating Save Button */}
