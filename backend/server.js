@@ -488,9 +488,10 @@ app.post('/api/export/word', async (req, res) => {
             for (let idx = 0; idx < data.photos.length; idx++) {
                 const photoBase64 = data.photos[idx];
                 try {
-                    const matches = photoBase64.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-                    if (matches && matches.length === 3) {
-                        const buffer = Buffer.from(matches[2], 'base64');
+                    const base64DataIndex = photoBase64.indexOf('base64,');
+                    if (base64DataIndex !== -1) {
+                        const base64Data = photoBase64.substring(base64DataIndex + 7);
+                        const buffer = Buffer.from(base64Data, 'base64');
                         const dimensions = sizeOf(buffer);
 
                         let width = dimensions.width;
@@ -501,11 +502,18 @@ app.post('/api/export/word', async (req, res) => {
                             width = maxWidth;
                         }
 
+                        // Try to extract extension for docx
+                        let mimeExtension = 'jpeg';
+                        const mimeMatch = photoBase64.substring(0, base64DataIndex).match(/data:image\/([^;]+)/);
+                        if (mimeMatch) mimeExtension = mimeMatch[1].toLowerCase();
+                        if (mimeExtension === 'jpg') mimeExtension = 'jpeg';
+
                         children.push(new Paragraph({
                             children: [
                                 new ImageRun({
                                     data: buffer,
-                                    transformation: { width: width, height: height }
+                                    transformation: { width: width, height: height },
+                                    type: mimeExtension
                                 })
                             ],
                             alignment: AlignmentType.CENTER,
@@ -517,6 +525,8 @@ app.post('/api/export/word', async (req, res) => {
                             alignment: AlignmentType.CENTER,
                             spacing: { after: 400 }
                         }));
+                    } else {
+                        console.error("No base64, found in photo data");
                     }
                 } catch (e) {
                     console.error("Failed to process photo for Word export:", e);
