@@ -9,7 +9,7 @@ const docx = require('docx');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const sizeOf = require('image-size');
+const sizeOf = require('image-size').imageSize;
 
 const {
     Document, Packer, Paragraph, TextRun, HeadingLevel,
