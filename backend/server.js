@@ -9,11 +9,12 @@ const docx = require('docx');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const sizeOf = require('image-size');
 
 const {
     Document, Packer, Paragraph, TextRun, HeadingLevel,
     Table, TableRow, TableCell, WidthType, BorderStyle,
-    AlignmentType, PageBreak, Header, Footer
+    AlignmentType, PageBreak, Header, Footer, ImageRun
 } = docx;
 
 // Models
@@ -470,6 +471,57 @@ app.post('/api/export/word', async (req, res) => {
                     children.push(new Paragraph({ text: "", spacing: { after: 300 } })); // Spacer
                 }
             });
+        }
+
+        // 3. Photos
+        if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
+            children.push(new Paragraph({
+                children: [new PageBreak()]
+            }));
+
+            children.push(new Paragraph({
+                text: "INSPECTION PHOTOS",
+                heading: HeadingLevel.HEADING_2,
+                spacing: { before: 400, after: 400 },
+            }));
+
+            for (let idx = 0; idx < data.photos.length; idx++) {
+                const photoBase64 = data.photos[idx];
+                try {
+                    const matches = photoBase64.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+                    if (matches && matches.length === 3) {
+                        const buffer = Buffer.from(matches[2], 'base64');
+                        const dimensions = sizeOf(buffer);
+
+                        let width = dimensions.width;
+                        let height = dimensions.height;
+                        const maxWidth = 500;
+                        if (width > maxWidth) {
+                            height = Math.round((maxWidth / width) * height);
+                            width = maxWidth;
+                        }
+
+                        children.push(new Paragraph({
+                            children: [
+                                new ImageRun({
+                                    data: buffer,
+                                    transformation: { width: width, height: height }
+                                })
+                            ],
+                            alignment: AlignmentType.CENTER,
+                            spacing: { after: 200 }
+                        }));
+
+                        children.push(new Paragraph({
+                            children: [new TextRun({ text: `Photo ${idx + 1}`, size: 20, color: "6b7280" })],
+                            alignment: AlignmentType.CENTER,
+                            spacing: { after: 400 }
+                        }));
+                    }
+                } catch (e) {
+                    console.error("Failed to process photo for Word export:", e);
+                }
+            }
         }
 
         const doc = new Document({
