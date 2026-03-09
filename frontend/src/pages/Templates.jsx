@@ -406,6 +406,7 @@ export default function Templates() {
                                                                     >
                                                                         <option value="text">Text / Short</option>
                                                                         <option value="textarea">Text / Long</option>
+                                                                        <option value="bullets">Bulleted List</option>
                                                                         <option value="number">Number</option>
                                                                         <option value="date">Date picker</option>
                                                                         <option value="select">Dropdown</option>
@@ -431,7 +432,7 @@ export default function Templates() {
                                                         </div>
                                                         <div className="flex-1 min-w-0 pr-4">
                                                             <h3 className="text-sm font-semibold text-gray-900 truncate">{field.label || 'Unnamed Field'}</h3>
-                                                            <p className="text-xs text-gray-500 mt-0.5 capitalize">{field.type === 'textarea' ? 'Text / Long' : field.type === 'text' ? 'Text / Short' : field.type || 'Text / Short'}</p>
+                                                            <p className="text-xs text-gray-500 mt-0.5 capitalize">{field.type === 'textarea' ? 'Text / Long' : field.type === 'text' ? 'Text / Short' : field.type === 'bullets' ? 'Bulleted List' : field.type || 'Text / Short'}</p>
                                                         </div>
                                                         <button onClick={(e) => { e.stopPropagation(); setActiveEditIndex(index); }} className="p-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all" title="Edit Field">
                                                             <Edit2 className="w-4 h-4" />

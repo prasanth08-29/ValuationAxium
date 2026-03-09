@@ -436,7 +436,22 @@ app.post('/api/export/word', async (req, res) => {
                         if (field.type === 'button') return;
 
                         const label = field.label || field.id;
-                        const value = data[field.id] || "N/A";
+                        let value = data[field.id];
+
+                        let cellChildren = [];
+                        if (field.type === 'bullets' && Array.isArray(value)) {
+                            if (value.length === 0) {
+                                cellChildren = [new Paragraph({ children: [new TextRun({ text: "N/A", size: 20 })] })];
+                            } else {
+                                cellChildren = value.map(item => new Paragraph({
+                                    children: [new TextRun({ text: item, size: 20 })],
+                                    bullet: { level: 0 },
+                                    spacing: { after: 50 }
+                                }));
+                            }
+                        } else {
+                            cellChildren = [new Paragraph({ children: [new TextRun({ text: String(value || "N/A"), size: 20 })] })];
+                        }
 
                         tableRows.push(new TableRow({
                             children: [
@@ -447,7 +462,7 @@ app.post('/api/export/word', async (req, res) => {
                                     shading: { fill: "f3f4f6" }
                                 }),
                                 new TableCell({
-                                    children: [new Paragraph({ children: [new TextRun({ text: String(value), size: 20 })] })],
+                                    children: cellChildren,
                                     width: { size: 60, type: WidthType.PERCENTAGE },
                                     margins: { top: 100, bottom: 100, left: 100, right: 100 }
                                 })

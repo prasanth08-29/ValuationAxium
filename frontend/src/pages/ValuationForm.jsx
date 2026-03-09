@@ -1,10 +1,78 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft, Camera, CheckCircle2, Download, AlertCircle, UploadCloud, Image as ImageIcon, X } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAlert } from '../context/AlertContext';
+
+function BulletInput({ value = [], onChange, label, error, register, id }) {
+    const [inputValue, setInputValue] = useState("");
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            addItem();
+        }
+    };
+
+    const addItem = () => {
+        if (inputValue.trim()) {
+            onChange([...value, inputValue.trim()]);
+            setInputValue("");
+        }
+    };
+
+    const removeItem = (index) => {
+        const newValue = [...value];
+        newValue.splice(index, 1);
+        onChange(newValue);
+    };
+
+    return (
+        <div className="space-y-3">
+            <div className="flex gap-2">
+                <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Type an item and press Enter...`}
+                    className={`flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-500 focus:ring-primary-50 focus:ring-4 transition-all text-gray-900 bg-white`}
+                />
+                <button
+                    type="button"
+                    onClick={addItem}
+                    className="px-4 py-2 bg-primary-50 text-primary-600 font-bold rounded-xl hover:bg-primary-100 transition-colors"
+                >
+                    Add
+                </button>
+            </div>
+
+            {(value && value.length > 0) ? (
+                <ul className="space-y-2">
+                    {value.map((item, idx) => (
+                        <li key={idx} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl group hover:border-primary-200 transition-all">
+                            <div className="flex items-center gap-3">
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary-400"></span>
+                                <span className="text-sm text-gray-800 font-medium">{item}</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => removeItem(idx)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-xs text-gray-400 italic pl-1">No points added yet.</p>
+            )}
+        </div>
+    );
+}
 
 export default function ValuationForm() {
     const { templateId, id: reportId } = useParams();
@@ -27,7 +95,9 @@ export default function ValuationForm() {
             sec.fields?.forEach(field => {
                 if (field.type !== 'button' && field.type !== 'heading') {
                     // Make explicitly required ones string with min(1)
-                    if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
+                    if (field.type === 'bullets') {
+                        shape[field.id] = z.array(z.string()).optional();
+                    } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
                         shape[field.id] = z.string().min(1, `${field.label || field.id} is required`);
                     } else {
                         // Allow optional values
@@ -39,7 +109,7 @@ export default function ValuationForm() {
         return z.object(shape);
     }, [template]);
 
-    const { register, handleSubmit, getValues, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, getValues, reset, control, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         mode: 'onTouched'
     });
@@ -303,6 +373,21 @@ export default function ValuationForm() {
                                                 {...register(field.id)}
                                                 placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
                                             />
+                                        ) : field.type === 'bullets' ? (
+                                            <div className="w-full">
+                                                <Controller
+                                                    name={field.id}
+                                                    control={control}
+                                                    defaultValue={[]}
+                                                    render={({ field: { onChange, value } }) => (
+                                                        <BulletInput
+                                                            value={value}
+                                                            onChange={onChange}
+                                                            label={field.label}
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
                                         ) : field.type === 'select' ? (
                                             <select
                                                 className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
