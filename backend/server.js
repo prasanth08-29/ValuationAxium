@@ -489,62 +489,89 @@ app.post('/api/export/word', async (req, res) => {
         }
 
         // 3. Photos
-        if (data.photos && Array.isArray(data.photos) && data.photos.length > 0) {
-            children.push(new Paragraph({
-                children: [new PageBreak()]
-            }));
+        if (data.photos) {
+            const hasPhotos = Array.isArray(data.photos)
+                ? data.photos.length > 0
+                : (data.photos.guideline?.length > 0 || data.photos.location?.length > 0 || data.photos.property?.length > 0);
 
-            children.push(new Paragraph({
-                text: "INSPECTION PHOTOS",
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 400, after: 400 },
-            }));
+            if (hasPhotos) {
+                children.push(new Paragraph({ children: [new PageBreak()] }));
+                children.push(new Paragraph({
+                    text: "INSPECTION PHOTOS",
+                    heading: HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 400 },
+                }));
 
-            for (let idx = 0; idx < data.photos.length; idx++) {
-                const photoBase64 = data.photos[idx];
-                try {
-                    const base64DataIndex = photoBase64.indexOf('base64,');
-                    if (base64DataIndex !== -1) {
-                        const base64Data = photoBase64.substring(base64DataIndex + 7);
-                        const buffer = Buffer.from(base64Data, 'base64');
-                        const dimensions = sizeOf(buffer);
+                const processPhotoSection = (photoList, sectionTitle) => {
+                    if (!photoList || photoList.length === 0) return;
 
-                        let width = dimensions.width;
-                        let height = dimensions.height;
-                        const maxWidth = 500;
-                        if (width > maxWidth) {
-                            height = Math.round((maxWidth / width) * height);
-                            width = maxWidth;
+                    children.push(new Paragraph({
+                        children: [new TextRun({ text: sectionTitle, bold: true, size: 24, color: "1e3a8a" })],
+                        spacing: { before: 300, after: 200 },
+                    }));
+
+                    photoList.forEach((photo, idx) => {
+                        const photoBase64 = typeof photo === 'string' ? photo : (photo?.data || "");
+                        if (!photoBase64) return;
+
+                        const lat = photo?.lat;
+                        const lng = photo?.lng;
+
+                        try {
+                            const base64DataIndex = photoBase64.indexOf('base64,');
+                            if (base64DataIndex !== -1) {
+                                const base64Data = photoBase64.substring(base64DataIndex + 7);
+                                const buffer = Buffer.from(base64Data, 'base64');
+                                const dimensions = sizeOf(buffer);
+
+                                let width = dimensions.width;
+                                let height = dimensions.height;
+                                const maxWidth = 500;
+                                if (width > maxWidth) {
+                                    height = Math.round((maxWidth / width) * height);
+                                    width = maxWidth;
+                                }
+
+                                let mimeExtension = 'jpeg';
+                                const mimeMatch = photoBase64.substring(0, base64DataIndex).match(/data:image\/([^;]+)/);
+                                if (mimeMatch) mimeExtension = mimeMatch[1].toLowerCase();
+                                if (mimeExtension === 'jpg') mimeExtension = 'jpeg';
+
+                                children.push(new Paragraph({
+                                    children: [
+                                        new ImageRun({
+                                            data: buffer,
+                                            transformation: { width: width, height: height },
+                                            type: mimeExtension
+                                        })
+                                    ],
+                                    alignment: AlignmentType.CENTER,
+                                    spacing: { after: 200 }
+                                }));
+
+                                let caption = `${sectionTitle} - Photo ${idx + 1}`;
+                                if (lat && lng) {
+                                    caption += ` (Location: ${lat.toFixed(6)}, ${lng.toFixed(6)})`;
+                                }
+
+                                children.push(new Paragraph({
+                                    children: [new TextRun({ text: caption, size: 18, color: "6b7280" })],
+                                    alignment: AlignmentType.CENTER,
+                                    spacing: { after: 400 }
+                                }));
+                            }
+                        } catch (e) {
+                            console.error("Failed to process photo for Word export:", e);
                         }
+                    });
+                };
 
-                        // Try to extract extension for docx
-                        let mimeExtension = 'jpeg';
-                        const mimeMatch = photoBase64.substring(0, base64DataIndex).match(/data:image\/([^;]+)/);
-                        if (mimeMatch) mimeExtension = mimeMatch[1].toLowerCase();
-                        if (mimeExtension === 'jpg') mimeExtension = 'jpeg';
-
-                        children.push(new Paragraph({
-                            children: [
-                                new ImageRun({
-                                    data: buffer,
-                                    transformation: { width: width, height: height },
-                                    type: mimeExtension
-                                })
-                            ],
-                            alignment: AlignmentType.CENTER,
-                            spacing: { after: 200 }
-                        }));
-
-                        children.push(new Paragraph({
-                            children: [new TextRun({ text: `Photo ${idx + 1}`, size: 20, color: "6b7280" })],
-                            alignment: AlignmentType.CENTER,
-                            spacing: { after: 400 }
-                        }));
-                    } else {
-                        console.error("No base64, found in photo data");
-                    }
-                } catch (e) {
-                    console.error("Failed to process photo for Word export:", e);
+                if (Array.isArray(data.photos)) {
+                    processPhotoSection(data.photos, "General Photos");
+                } else {
+                    processPhotoSection(data.photos.guideline, "1. Guideline Value");
+                    processPhotoSection(data.photos.location, "2. Location Map");
+                    processPhotoSection(data.photos.property, "3. Property Images");
                 }
             }
         }

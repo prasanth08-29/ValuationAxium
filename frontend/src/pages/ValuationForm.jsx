@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Camera, CheckCircle2, Download, AlertCircle, UploadCloud, Image as ImageIcon, X } from 'lucide-react';
+import { Save, ArrowLeft, Camera, CheckCircle2, Download, AlertCircle, UploadCloud, Image as ImageIcon, X, MapPin } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -74,6 +74,101 @@ function BulletInput({ value = [], onChange, label, error, register, id }) {
     );
 }
 
+const captureLocation = () => {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+            resolve(null);
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => resolve(null),
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    });
+};
+
+function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }) {
+    const handleFiles = async (e, isCamera = false) => {
+        const files = Array.from(e.target.files);
+        let geoData = null;
+
+        if (isCamera && withGeo) {
+            geoData = await captureLocation();
+        }
+
+        const newPhotos = await Promise.all(files.map(file => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    resolve({
+                        data: reader.result,
+                        lat: geoData?.lat,
+                        lng: geoData?.lng,
+                        timestamp: new Date().toISOString()
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }));
+
+        setPhotos(prev => ({
+            ...prev,
+            [category]: [...prev[category], ...newPhotos]
+        }));
+    };
+
+    const removePhoto = (idx) => {
+        setPhotos(prev => ({
+            ...prev,
+            [category]: prev[category].filter((_, i) => i !== idx)
+        }));
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:bg-gray-50 transition-colors cursor-pointer group flex flex-col items-center justify-center bg-white">
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e)} />
+                    <UploadCloud className="w-5 h-5 text-gray-400 group-hover:text-primary-500 mb-2 transition-colors" />
+                    <p className="text-xs font-semibold text-gray-600">Gallery</p>
+                </label>
+
+                <label className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:bg-gray-50 transition-colors cursor-pointer group flex flex-col items-center justify-center bg-white">
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFiles(e, true)} />
+                    <Camera className="w-5 h-5 text-gray-400 group-hover:text-green-500 mb-2 transition-colors" />
+                    <p className="text-xs font-semibold text-gray-600">Camera</p>
+                </label>
+            </div>
+
+            {photos.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {photos.map((photo, idx) => (
+                        <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
+                            <img src={photo.data} alt="Upload" className="w-full h-full object-cover" />
+                            {photo.lat && (
+                                <div className="absolute top-1 left-1 bg-black/60 text-white text-[8px] px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+                                    <MapPin className="w-2 h-2" />
+                                    {photo.lat.toFixed(4)}, {photo.lng.toFixed(4)}
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <button
+                                    type="button"
+                                    onClick={() => removePhoto(idx)}
+                                    className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function ValuationForm() {
     const { templateId, id: reportId } = useParams();
     const navigate = useNavigate();
@@ -84,7 +179,11 @@ export default function ValuationForm() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [reportStatus, setReportStatus] = useState('Draft');
-    const [photos, setPhotos] = useState([]);
+    const [photos, setPhotos] = useState({
+        guideline: [],
+        location: [],
+        property: []
+    });
 
     const { showAlert } = useAlert();
 
@@ -140,7 +239,26 @@ export default function ValuationForm() {
                     // Populate the form fields with the saved data
                     reset(reportData.data);
                     if (reportData.data.photos) {
-                        setPhotos(reportData.data.photos);
+                        const savedPhotos = reportData.data.photos;
+                        if (Array.isArray(savedPhotos)) {
+                            // Migration: Put all existing photos into 'property' section
+                            // Map any string-only photos to the new {data: string} format
+                            const migrated = savedPhotos.map(p => typeof p === 'string' ? { data: p } : p);
+                            setPhotos({
+                                guideline: [],
+                                location: [],
+                                property: migrated
+                            });
+                        } else {
+                            // Categorized object format
+                            const migrated = { guideline: [], location: [], property: [] };
+                            for (const cat in savedPhotos) {
+                                if (Array.isArray(savedPhotos[cat])) {
+                                    migrated[cat] = savedPhotos[cat].map(p => typeof p === 'string' ? { data: p } : p);
+                                }
+                            }
+                            setPhotos(migrated);
+                        }
                     }
                 } catch (err) {
                     setError(err.message);
@@ -434,86 +552,67 @@ export default function ValuationForm() {
                 </div>
 
                 {/* Media / Photos Section */}
-                <div className="border-t border-gray-100 pt-6 mt-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <ImageIcon className="w-5 h-5 text-primary-500" />
+                <div className="border-t border-gray-100 pt-8 mt-10 space-y-10">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                        <ImageIcon className="w-6 h-6 text-primary-500" />
                         Inspection Media
                     </h3>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <label className="border-2 border-dashed border-primary-200 rounded-xl p-6 text-center hover:bg-primary-50 transition-colors cursor-pointer group flex flex-col items-center justify-center">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="hidden"
-                                onChange={async (e) => {
-                                    const files = Array.from(e.target.files);
-                                    const base64Photos = await Promise.all(files.map(file => {
-                                        return new Promise((resolve) => {
-                                            const reader = new FileReader();
-                                            reader.onloadend = () => resolve(reader.result);
-                                            reader.readAsDataURL(file);
-                                        });
-                                    }));
-                                    setPhotos(prev => [...prev, ...base64Photos]);
-                                }}
-                            />
-                            <div className="bg-white p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform mb-3">
-                                <UploadCloud className="w-6 h-6 text-primary-500" />
-                            </div>
-                            <p className="text-sm font-semibold text-gray-800">Upload Photos</p>
-                            <p className="text-xs text-gray-500 mt-1">Browse from gallery</p>
-                        </label>
-
-                        <label className="border-2 border-dashed border-green-200 rounded-xl p-6 text-center hover:bg-green-50 transition-colors cursor-pointer group flex flex-col items-center justify-center">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                multiple
-                                className="hidden"
-                                onChange={async (e) => {
-                                    const files = Array.from(e.target.files);
-                                    const base64Photos = await Promise.all(files.map(file => {
-                                        return new Promise((resolve) => {
-                                            const reader = new FileReader();
-                                            reader.onloadend = () => resolve(reader.result);
-                                            reader.readAsDataURL(file);
-                                        });
-                                    }));
-                                    setPhotos(prev => [...prev, ...base64Photos]);
-                                }}
-                            />
-                            <div className="bg-white p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform mb-3">
-                                <Camera className="w-6 h-6 text-green-500" />
-                            </div>
-                            <p className="text-sm font-semibold text-gray-800">Take Photo</p>
-                            <p className="text-xs text-gray-500 mt-1">Use device camera</p>
-                        </label>
+                    {/* 1. Guideline Value Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-600 text-xs">1</span>
+                                Guideline Value
+                            </h4>
+                            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.guideline.length} Images</span>
+                        </div>
+                        <ImageUploadZone
+                            category="guideline"
+                            photos={photos.guideline}
+                            setPhotos={setPhotos}
+                            label="Upload Guideline Value"
+                        />
                     </div>
 
-                    {photos.length > 0 && (
-                        <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3 block">Attached Photos ({photos.length})</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {photos.map((photo, idx) => (
-                                    <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
-                                        <img src={photo} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => setPhotos(photos.filter((_, i) => i !== idx))}
-                                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                    {/* 2. Location Map Section */}
+                    <div className="space-y-4 border-t border-gray-50 pt-8">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs">2</span>
+                                Location Map
+                            </h4>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded">Auto Geo-Tagging</span>
+                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.location.length} Images</span>
                             </div>
                         </div>
-                    )}
+                        <p className="text-xs text-gray-500">Camera captures in this section will automatically include Latitude & Longitude coordinates.</p>
+                        <ImageUploadZone
+                            category="location"
+                            photos={photos.location}
+                            setPhotos={setPhotos}
+                            label="Upload Location Map"
+                            withGeo={true}
+                        />
+                    </div>
+
+                    {/* 3. Property Images Section */}
+                    <div className="space-y-4 border-t border-gray-50 pt-8">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
+                                Property Images
+                            </h4>
+                            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
+                        </div>
+                        <ImageUploadZone
+                            category="property"
+                            photos={photos.property}
+                            setPhotos={setPhotos}
+                            label="Upload Property Photos"
+                        />
+                    </div>
                 </div>
 
                 {/* Floating Save Button */}
