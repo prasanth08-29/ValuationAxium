@@ -439,7 +439,7 @@ app.post('/api/export/word', async (req, res) => {
                         let value = data[field.id];
 
                         let cellChildren = [];
-                        if (field.type === 'bullets' && Array.isArray(value)) {
+                        if ((field.isList || field.type === 'bullets') && Array.isArray(value)) {
                             if (value.length === 0) {
                                 cellChildren = [new Paragraph({ children: [new TextRun({ text: "N/A", size: 20 })] })];
                             } else {

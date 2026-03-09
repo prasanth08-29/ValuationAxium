@@ -95,7 +95,7 @@ export default function ValuationForm() {
             sec.fields?.forEach(field => {
                 if (field.type !== 'button' && field.type !== 'heading') {
                     // Make explicitly required ones string with min(1)
-                    if (field.type === 'bullets') {
+                    if (field.isList || field.type === 'bullets') {
                         shape[field.id] = z.array(z.string()).optional();
                     } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
                         shape[field.id] = z.string().min(1, `${field.label || field.id} is required`);
@@ -168,6 +168,7 @@ export default function ValuationForm() {
                                     id: f.id,
                                     label: f.label,
                                     type: f.type || 'text',
+                                    isList: f.isList || false,
                                     placeholder: f.placeholder || '',
                                     options: f.options || [],
                                     buttonType: f.buttonType || 'button'
@@ -367,13 +368,7 @@ export default function ValuationForm() {
 
                                         {field.type === 'heading' ? (
                                             <h4 className="text-base font-bold text-gray-800 border-b border-gray-200 pb-2 mt-4 mb-2">{field.label}</h4>
-                                        ) : field.type === 'textarea' ? (
-                                            <textarea
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
-                                                {...register(field.id)}
-                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
-                                            />
-                                        ) : field.type === 'bullets' ? (
+                                        ) : field.isList ? (
                                             <div className="w-full">
                                                 <Controller
                                                     name={field.id}
@@ -388,6 +383,12 @@ export default function ValuationForm() {
                                                     )}
                                                 />
                                             </div>
+                                        ) : field.type === 'textarea' ? (
+                                            <textarea
+                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
+                                                {...register(field.id)}
+                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                            />
                                         ) : field.type === 'select' ? (
                                             <select
                                                 className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
