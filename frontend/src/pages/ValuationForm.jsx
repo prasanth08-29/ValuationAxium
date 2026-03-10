@@ -421,13 +421,11 @@ export default function ValuationForm() {
                             {
                                 title: 'Template Variables',
                                 fields: found.fields.map(f => ({
-                                    id: f.id,
-                                    label: f.label,
+                                    ...f,
                                     type: f.type || 'text',
                                     isList: f.isList || false,
                                     placeholder: f.placeholder || '',
-                                    options: f.options || [],
-                                    buttonType: f.buttonType || 'button'
+                                    options: Array.isArray(f.options) ? f.options : (typeof f.options === 'string' ? f.options.split(',').map(s => s.trim()) : [])
                                 }))
                             }
                         ]
@@ -711,8 +709,8 @@ export default function ValuationForm() {
                                                                 ))}
                                                             </select>
                                                         ) : field.type === 'radio' ? (
-                                                            <div className="flex flex-wrap gap-x-6 gap-y-3 mt-2 p-3 bg-gray-50/50 rounded-xl border border-gray-200/50 min-h-[52px]">
-                                                                {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).map(opt => (
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-3 mt-2 p-3 bg-gray-50/50 rounded-xl border border-gray-200/50 min-h-[52px]">
+                                                                {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => (
                                                                     <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-3 bg-white rounded-lg border border-transparent hover:border-primary-200 hover:shadow-sm transition-all">
                                                                         <input
                                                                             type="radio"
@@ -723,9 +721,18 @@ export default function ValuationForm() {
                                                                         <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
                                                                     </label>
                                                                 ))}
-                                                                {(!field.options || field.options.length === 0) && (
-                                                                    <span className="text-xs text-gray-400 italic flex items-center p-2">No options defined in template</span>
+                                                                {(!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : !field.options.trim())) && (
+                                                                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
+                                                                        <AlertCircle className="w-4 h-4" />
+                                                                        <span className="text-xs font-medium">Please add options in Template Manager</span>
+                                                                    </div>
                                                                 )}
+                                                            </div>
+                                                        ) : field.type === 'subheading' ? (
+                                                            <div className="mt-6 mb-2 py-2 border-b border-gray-100">
+                                                                <h4 className="text-sm font-bold text-gray-900 border-l-4 border-primary-500 pl-3 uppercase tracking-tight">
+                                                                    {field.label}
+                                                                </h4>
                                                             </div>
                                                         ) : field.type === 'heading' ? null : (
                                                             <input
