@@ -652,11 +652,17 @@ export default function ValuationForm() {
                                     {step.type === 'section' ? (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {step.content.fields.map(field => (
-                                                <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading') ? 'md:col-span-2' : ''}>
-                                                    {field.type !== 'heading' && (
+                                                <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading' || field.type === 'subheading') ? 'md:col-span-2' : ''}>
+                                                    {field.type !== 'heading' && field.type !== 'subheading' && (
                                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                             {field.label} {field.required && <span className="text-red-500">*</span>}
                                                         </label>
+                                                    )}
+
+                                                    {field.type === 'subheading' && (
+                                                        <h3 className="text-base font-bold text-primary-700 mt-4 mb-2 pb-1 border-b border-primary-100 uppercase tracking-tight">
+                                                            {field.label}
+                                                        </h3>
                                                     )}
 
                                                     {field.isList ? (
@@ -690,7 +696,21 @@ export default function ValuationForm() {
                                                                 <option key={opt} value={opt}>{opt}</option>
                                                             ))}
                                                         </select>
-                                                    ) : (
+                                                    ) : field.type === 'radio' ? (
+                                                        <div className="flex flex-wrap gap-4 mt-2 p-1">
+                                                            {field.options?.map(opt => (
+                                                                <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+                                                                    <input
+                                                                        type="radio"
+                                                                        value={opt}
+                                                                        {...register(field.id)}
+                                                                        className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500 transition-all"
+                                                                    />
+                                                                    <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors">{opt}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    ) : field.type === 'heading' ? null : (
                                                         <input
                                                             type={field.type}
                                                             className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}

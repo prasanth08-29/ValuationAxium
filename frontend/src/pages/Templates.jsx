@@ -410,7 +410,9 @@ export default function Templates() {
                                                                             <option value="number">Number</option>
                                                                             <option value="date">Date picker</option>
                                                                             <option value="select">Dropdown</option>
+                                                                            <option value="radio">Radio Buttons</option>
                                                                             <option value="heading">Section Heading</option>
+                                                                            <option value="subheading">Sub Heading</option>
                                                                             <option value="button">Button Action</option>
                                                                         </select>
                                                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -467,7 +469,7 @@ export default function Templates() {
                                                         </button>
                                                     </div>
                                                 )}
-                                                {activeEditIndex === index && field.type === 'select' && (
+                                                {activeEditIndex === index && (field.type === 'select' || field.type === 'radio') && (
                                                     <div className="w-full space-y-1 mt-4 pl-8 sm:pl-11">
                                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Options (Comma separated)</label>
                                                         <input

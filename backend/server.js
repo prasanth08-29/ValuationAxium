@@ -468,6 +468,16 @@ app.post('/api/export/word', async (req, res) => {
                             return;
                         }
 
+                        if (field.type === 'subheading') {
+                            flushTable();
+                            children.push(new Paragraph({
+                                text: field.label.toUpperCase(),
+                                heading: HeadingLevel.HEADING_4,
+                                spacing: { before: 300, after: 150 },
+                            }));
+                            return;
+                        }
+
                         const label = field.label || field.id;
                         let value = data[field.id];
 
@@ -635,6 +645,18 @@ app.post('/api/export/word', async (req, res) => {
                         run: {
                             color: "1e3a8a",
                             size: 24,
+                            bold: true,
+                        },
+                    },
+                    {
+                        id: "Heading4",
+                        name: "Heading 4",
+                        basedOn: "Normal",
+                        next: "Normal",
+                        quickFormat: true,
+                        run: {
+                            color: "1e3a8a",
+                            size: 20,
                             bold: true,
                         },
                     },
