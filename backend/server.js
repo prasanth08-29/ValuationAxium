@@ -412,10 +412,10 @@ app.post('/api/export/word', async (req, res) => {
                 }
 
                 if (Array.isArray(sec.fields) && sec.fields.length > 0) {
-                    const tableRows = [];
+                    let tableRows = [];
 
-                    // Table Header
-                    tableRows.push(new TableRow({
+                    // Reusable header construction
+                    const createHeaderRow = () => new TableRow({
                         children: [
                             new TableCell({
                                 children: [new Paragraph({ children: [new TextRun({ text: "Property Detail", bold: true, color: "ffffff" })], alignment: AlignmentType.LEFT })],
@@ -430,10 +430,43 @@ app.post('/api/export/word', async (req, res) => {
                                 margins: { top: 100, bottom: 100, left: 100, right: 100 }
                             })
                         ]
-                    }));
+                    });
+
+                    // Utility to finalize a table group
+                    const flushTable = () => {
+                        if (tableRows.length > 1) {
+                            children.push(new Table({
+                                rows: tableRows,
+                                width: { size: 100, type: WidthType.PERCENTAGE },
+                                borders: {
+                                    top: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                    bottom: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                    left: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                    right: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                    insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "e5e7eb" },
+                                    insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "e5e7eb" },
+                                }
+                            }));
+                            children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
+                        }
+                        tableRows = [createHeaderRow()];
+                    };
+
+                    // Initialize first table header
+                    tableRows.push(createHeaderRow());
 
                     sec.fields.forEach(field => {
                         if (field.type === 'button') return;
+
+                        if (field.type === 'heading') {
+                            flushTable();
+                            children.push(new Paragraph({
+                                text: field.label.toUpperCase(),
+                                heading: HeadingLevel.HEADING_3,
+                                spacing: { before: 400, after: 200 },
+                            }));
+                            return;
+                        }
 
                         const label = field.label || field.id;
                         let value = data[field.id];
@@ -470,20 +503,22 @@ app.post('/api/export/word', async (req, res) => {
                         }));
                     });
 
-                    children.push(new Table({
-                        rows: tableRows,
-                        width: { size: 100, type: WidthType.PERCENTAGE },
-                        borders: {
-                            top: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
-                            bottom: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
-                            left: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
-                            right: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
-                            insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "e5e7eb" },
-                            insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "e5e7eb" },
-                        }
-                    }));
-
-                    children.push(new Paragraph({ text: "", spacing: { after: 300 } })); // Spacer
+                    // Final flush
+                    if (tableRows.length > 1) {
+                        children.push(new Table({
+                            rows: tableRows,
+                            width: { size: 100, type: WidthType.PERCENTAGE },
+                            borders: {
+                                top: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                bottom: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                left: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                right: { style: BorderStyle.SINGLE, size: 1, color: "d1d5db" },
+                                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "e5e7eb" },
+                                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "e5e7eb" },
+                            }
+                        }));
+                        children.push(new Paragraph({ text: "", spacing: { after: 300 } }));
+                    }
                 }
             });
         }
@@ -588,6 +623,18 @@ app.post('/api/export/word', async (req, res) => {
                         run: {
                             color: "1e3a8a",
                             size: 28,
+                            bold: true,
+                        },
+                    },
+                    {
+                        id: "Heading3",
+                        name: "Heading 3",
+                        basedOn: "Normal",
+                        next: "Normal",
+                        quickFormat: true,
+                        run: {
+                            color: "1e3a8a",
+                            size: 24,
                             bold: true,
                         },
                     },
