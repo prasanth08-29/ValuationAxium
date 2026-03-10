@@ -459,11 +459,14 @@ app.post('/api/export/word', async (req, res) => {
                         if (field.type === 'button') return;
 
                         // Dependency check for export visibility
-                        if (field.dependsOn) {
-                            const parentValue = data[field.dependsOn];
-                            if (String(parentValue || '') !== String(field.dependsOnValue || '')) {
-                                return; // Skip hidden field in export too
-                            }
+                        const conditions = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []);
+                        if (conditions.length > 0) {
+                            const allMet = conditions.every(cond => {
+                                if (!cond.fieldId) return true;
+                                const parentValue = data[cond.fieldId];
+                                return String(parentValue || '') === String(cond.value || '');
+                            });
+                            if (!allMet) return; // Skip hidden field in export
                         }
 
                         if (field.type === 'heading') {

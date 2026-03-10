@@ -655,11 +655,16 @@ export default function ValuationForm() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {step.content.fields.map(field => {
                                                 // Conditional visibility check
-                                                if (field.dependsOn) {
-                                                    const parentValue = formValues[field.dependsOn];
-                                                    if (String(parentValue || '') !== String(field.dependsOnValue || '')) {
-                                                        return null;
-                                                    }
+                                                const conditions = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []);
+
+                                                if (conditions.length > 0) {
+                                                    const allMet = conditions.every(cond => {
+                                                        if (!cond.fieldId) return true;
+                                                        const parentValue = formValues[cond.fieldId];
+                                                        return String(parentValue || '') === String(cond.value || '');
+                                                    });
+
+                                                    if (!allMet) return null;
                                                 }
 
                                                 return (
