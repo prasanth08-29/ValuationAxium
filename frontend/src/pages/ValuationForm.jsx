@@ -252,6 +252,7 @@ export default function ValuationForm() {
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeStep, setActiveStep] = useState(0);
     const [reportStatus, setReportStatus] = useState('Draft');
     const [photos, setPhotos] = useState({
         guideline: [],
@@ -282,10 +283,32 @@ export default function ValuationForm() {
         return z.object(shape);
     }, [template]);
 
-    const { register, handleSubmit, getValues, reset, control, formState: { errors } } = useForm({
+    const { register, handleSubmit, getValues, reset, control, trigger, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         mode: 'onTouched'
     });
+
+    const steps = useMemo(() => {
+        if (!template || !template.sections) return [];
+        const sectionSteps = template.sections.map(s => ({ type: 'section', content: s }));
+        return [...sectionSteps, { type: 'photos', title: 'Inspection Media' }];
+    }, [template]);
+
+    const handleNext = async () => {
+        // Find fields in current section to validate
+        if (steps[activeStep].type === 'section') {
+            const currentFields = steps[activeStep].content.fields.map(f => f.id);
+            const isValid = await trigger(currentFields);
+            if (!isValid) return;
+        }
+        setActiveStep(prev => Math.min(prev + 1, steps.length - 1));
+        window.scrollTo(0, 0);
+    };
+
+    const handleBack = () => {
+        setActiveStep(prev => Math.max(prev - 1, 0));
+        window.scrollTo(0, 0);
+    };
 
     useEffect(() => {
         const fetchTemplateData = async () => {
@@ -532,10 +555,25 @@ export default function ValuationForm() {
                 </button>
                 <div>
                     <h2 className="text-xl md:text-2xl font-bold text-gray-900">{template.title}</h2>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full mt-1 inline-block ${reportStatus === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                        {reportStatus}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${reportStatus === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                            {reportStatus}
+                        </span>
+                        {steps.length > 0 && (
+                            <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
+                                Step {activeStep + 1} of {steps.length}
+                            </span>
+                        )}
+                    </div>
                 </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-8 bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                <div
+                    className="bg-primary-500 h-full transition-all duration-500 ease-out"
+                    style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
+                ></div>
             </div>
 
             <form onSubmit={handleSubmit((data) => handleSave(data, 'Completed'), (errors) => {
@@ -544,177 +582,203 @@ export default function ValuationForm() {
             })} className="space-y-6 md:space-y-8 bg-white p-4 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
 
 
-                {/* Dynamic Fields rendering by sections */}
-                <div className="space-y-10">
-                    {template.sections ? template.sections.map((section, idx) => (
-                        <div key={idx} className="border border-gray-100 rounded-xl p-4 md:p-6 bg-gray-50/50">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">{section.title}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {section.fields.map(field => (
-                                    <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading') ? 'md:col-span-2' : ''}>
-                                        {field.type !== 'heading' && (
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                {field.label} {field.required && <span className="text-red-500">*</span>}
-                                            </label>
-                                        )}
+                {/* Render Current Step */}
+                {steps[activeStep]?.type === 'section' && (
+                    <div className="border border-gray-100 rounded-xl p-4 md:p-6 bg-gray-50/50">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+                            {steps[activeStep].content.title}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {steps[activeStep].content.fields.map(field => (
+                                <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading') ? 'md:col-span-2' : ''}>
+                                    {field.type !== 'heading' && (
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            {field.label} {field.required && <span className="text-red-500">*</span>}
+                                        </label>
+                                    )}
 
-                                        {field.type === 'heading' ? (
-                                            <h4 className="text-base font-bold text-gray-800 border-b border-gray-200 pb-2 mt-4 mb-2">{field.label}</h4>
-                                        ) : field.isList ? (
-                                            <div className="w-full">
-                                                <Controller
-                                                    name={field.id}
-                                                    control={control}
-                                                    defaultValue={[]}
-                                                    render={({ field: { onChange, value } }) => (
-                                                        <BulletInput
-                                                            value={value}
-                                                            onChange={onChange}
-                                                            label={field.label}
-                                                        />
-                                                    )}
-                                                />
-                                            </div>
-                                        ) : field.type === 'textarea' ? (
-                                            <textarea
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
-                                                {...register(field.id)}
-                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                    {field.type === 'heading' ? (
+                                        <h4 className="text-base font-bold text-gray-800 border-b border-gray-200 pb-2 mt-4 mb-2">{field.label}</h4>
+                                    ) : field.isList ? (
+                                        <div className="w-full">
+                                            <Controller
+                                                name={field.id}
+                                                control={control}
+                                                defaultValue={[]}
+                                                render={({ field: { onChange, value } }) => (
+                                                    <BulletInput
+                                                        value={value}
+                                                        onChange={onChange}
+                                                        label={field.label}
+                                                    />
+                                                )}
                                             />
-                                        ) : field.type === 'select' ? (
-                                            <select
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
-                                                {...register(field.id)}
-                                            >
-                                                <option value="">Select {field.label}</option>
-                                                {field.options?.map(opt => (
-                                                    <option key={opt} value={opt}>{opt}</option>
-                                                ))}
-                                            </select>
-                                        ) : field.type === 'button' ? (
-                                            <button
-                                                type={field.buttonType || 'button'}
-                                                className="w-full px-4 py-3 rounded-xl border border-transparent shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-500/30 transition-all font-bold"
-                                                onClick={(e) => {
-                                                    if (field.buttonType !== 'submit' && field.buttonType !== 'reset') {
-                                                        e.preventDefault();
-                                                        alert(`${field.label} clicked`);
-                                                    }
-                                                }}
-                                            >
-                                                {field.label}
-                                            </button>
-                                        ) : (
-                                            <input
-                                                type={field.type}
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
-                                                {...register(field.id)}
-                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
-                                            />
-                                        )}
-                                        {errors[field.id] && (
-                                            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                                                <AlertCircle className="w-4 h-4" />
-                                                {errors[field.id]?.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                ))}
+                                        </div>
+                                    ) : field.type === 'textarea' ? (
+                                        <textarea
+                                            className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
+                                            {...register(field.id)}
+                                            placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                        />
+                                    ) : field.type === 'select' ? (
+                                        <select
+                                            className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
+                                            {...register(field.id)}
+                                        >
+                                            <option value="">Select {field.label}</option>
+                                            {field.options?.map(opt => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                    ) : field.type === 'button' ? (
+                                        <button
+                                            type={field.buttonType || 'button'}
+                                            className="w-full px-4 py-3 rounded-xl border border-transparent shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-500/30 transition-all font-bold"
+                                            onClick={(e) => {
+                                                if (field.buttonType !== 'submit' && field.buttonType !== 'reset') {
+                                                    e.preventDefault();
+                                                    alert(`${field.label} clicked`);
+                                                }
+                                            }}
+                                        >
+                                            {field.label}
+                                        </button>
+                                    ) : (
+                                        <input
+                                            type={field.type}
+                                            className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
+                                            {...register(field.id)}
+                                            placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                        />
+                                    )}
+                                    {errors[field.id] && (
+                                        <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {errors[field.id]?.message}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Render Photos Step */}
+                {steps[activeStep]?.type === 'photos' && (
+                    <div className="border border-gray-100 rounded-xl p-4 md:p-6 bg-gray-50/50 space-y-10">
+                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-200 pb-4">
+                            <ImageIcon className="w-6 h-6 text-primary-500" />
+                            Inspection Media
+                        </h3>
+
+                        {/* 1. Guideline Value Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-600 text-xs">1</span>
+                                    Guideline Value
+                                </h4>
+                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.guideline.length} Images</span>
                             </div>
+                            <ImageUploadZone
+                                category="guideline"
+                                photos={photos.guideline}
+                                setPhotos={setPhotos}
+                                label="Upload Guideline Value"
+                            />
                         </div>
-                    )) : null}
-                </div>
 
-                {/* Media / Photos Section */}
-                <div className="border-t border-gray-100 pt-8 mt-10 space-y-10">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                        <ImageIcon className="w-6 h-6 text-primary-500" />
-                        Inspection Media
-                    </h3>
-
-                    {/* 1. Guideline Value Section */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-600 text-xs">1</span>
-                                Guideline Value
-                            </h4>
-                            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.guideline.length} Images</span>
-                        </div>
-                        <ImageUploadZone
-                            category="guideline"
-                            photos={photos.guideline}
-                            setPhotos={setPhotos}
-                            label="Upload Guideline Value"
-                        />
-                    </div>
-
-                    {/* 2. Location Map Section */}
-                    <div className="space-y-4 border-t border-gray-50 pt-8">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs">2</span>
-                                Location Map
-                            </h4>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded">Auto Geo-Tagging</span>
-                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.location.length} Images</span>
+                        {/* 2. Location Map Section */}
+                        <div className="space-y-4 border-t border-gray-200 pt-8">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs">2</span>
+                                    Location Map
+                                </h4>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded">Auto Geo-Tagging</span>
+                                    <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.location.length} Images</span>
+                                </div>
                             </div>
+                            <ImageUploadZone
+                                category="location"
+                                photos={photos.location}
+                                setPhotos={setPhotos}
+                                label="Upload Location Map"
+                                withGeo={true}
+                            />
                         </div>
-                        <p className="text-xs text-gray-500">Camera captures in this section will automatically include Latitude & Longitude coordinates.</p>
-                        <ImageUploadZone
-                            category="location"
-                            photos={photos.location}
-                            setPhotos={setPhotos}
-                            label="Upload Location Map"
-                            withGeo={true}
-                        />
-                    </div>
 
-                    {/* 3. Property Images Section */}
-                    <div className="space-y-4 border-t border-gray-50 pt-8">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
-                                Property Images
-                            </h4>
-                            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
+                        {/* 3. Property Images Section */}
+                        <div className="space-y-4 border-t border-gray-200 pt-8">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
+                                    Property Images
+                                </h4>
+                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
+                            </div>
+                            <ImageUploadZone
+                                category="property"
+                                photos={photos.property}
+                                setPhotos={setPhotos}
+                                label="Upload Property Photos"
+                            />
                         </div>
-                        <ImageUploadZone
-                            category="property"
-                            photos={photos.property}
-                            setPhotos={setPhotos}
-                            label="Upload Property Photos"
-                        />
                     </div>
-                </div>
+                )}
 
-                {/* Floating Save Button Bar - Elevated to clear mobile bottom nav */}
-                <div className="fixed bottom-[88px] md:bottom-8 left-4 right-4 md:left-auto md:right-8 z-50 flex shadow-2xl rounded-2xl md:rounded-full bg-white border border-primary-100 overflow-hidden ring-4 ring-black/5">
-                    <button
-                        type="button"
-                        disabled={saving}
-                        onClick={() => handleSave(getValues(), 'Draft')}
-                        className="flex-1 md:flex-none flex justify-center items-center gap-2 py-3 px-4 md:px-6 border-r border-gray-100 text-xs md:text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 active:bg-gray-100 transition-all disabled:opacity-50"
-                    >
-                        Save Draft
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="flex-[2] md:min-w-[200px] flex justify-center items-center gap-2 py-3.5 px-6 md:px-10 text-sm md:text-base font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 transition-all disabled:opacity-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                    >
-                        {saving ? (
-                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4 md:w-5 md:h-5" />
-                                <span className="whitespace-nowrap">
-                                    {reportId ? (reportStatus === 'Completed' ? 'Save Changes' : 'Complete') : 'Complete Valuation'}
-                                </span>
-                            </>
+                {/* Floating Navigation & Save Bar */}
+                <div className="fixed bottom-[88px] md:bottom-8 left-4 right-4 md:left-auto md:right-8 z-50 flex flex-col gap-4">
+                    {/* Stepper Navigation */}
+                    <div className="flex gap-2 w-full md:w-auto self-end">
+                        {activeStep > 0 && (
+                            <button
+                                type="button"
+                                onClick={handleBack}
+                                className="flex-1 md:flex-none px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl shadow-lg hover:bg-gray-50 flex items-center justify-center gap-2 transition-all"
+                            >
+                                Back
+                            </button>
                         )}
-                    </button>
+                        {activeStep < steps.length - 1 && (
+                            <button
+                                type="button"
+                                onClick={handleNext}
+                                className="flex-[2] md:min-w-[150px] px-6 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 flex items-center justify-center gap-2 transition-all"
+                            >
+                                Next Section
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Final Submission Bar (Only shows save options) */}
+                    <div className="flex shadow-2xl rounded-2xl md:rounded-full bg-white border border-primary-100 overflow-hidden ring-4 ring-black/5">
+                        <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => handleSave(getValues(), 'Draft')}
+                            className="flex-1 md:flex-none flex justify-center items-center gap-2 py-3 px-4 md:px-6 border-r border-gray-100 text-xs md:text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-50"
+                        >
+                            Save Draft
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className={`flex-[2] md:min-w-[200px] flex justify-center items-center gap-2 py-3.5 px-6 md:px-10 text-sm md:text-base font-bold text-white transition-all disabled:opacity-50 ${activeStep === steps.length - 1 ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'}`}
+                        >
+                            {saving ? (
+                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4 md:w-5 md:h-5" />
+                                    <span className="whitespace-nowrap">
+                                        {activeStep === steps.length - 1 ? (reportId ? 'Submit Changes' : 'Complete Valuation') : 'Instant Submit'}
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
