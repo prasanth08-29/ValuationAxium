@@ -470,15 +470,57 @@ export default function Templates() {
                                                     </div>
                                                 )}
                                                 {activeEditIndex === index && (field.type === 'select' || field.type === 'radio') && (
-                                                    <div className="w-full space-y-1 mt-4 pl-8 sm:pl-11">
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Options (Comma separated)</label>
-                                                        <input
-                                                            type="text"
-                                                            value={field.options ? field.options.join(', ') : ''}
-                                                            onChange={(e) => handleUpdateField(index, 'options', e.target.value.split(',').map(s => s.trim()))}
-                                                            placeholder="Option 1, Option 2, Option 3"
-                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
-                                                        />
+                                                    <div className="w-full space-y-3 mt-4 pl-8 sm:pl-11">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Options List</label>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const currentOptions = Array.isArray(field.options) ? field.options : [];
+                                                                    handleUpdateField(index, 'options', [...currentOptions, `Option ${currentOptions.length + 1}`]);
+                                                                }}
+                                                                className="text-[10px] font-bold text-primary-600 hover:text-primary-700 bg-primary-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
+                                                            >
+                                                                <Plus className="w-3 h-3" /> Add Option
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                            {(Array.isArray(field.options) ? field.options : []).map((opt, optIdx) => (
+                                                                <div key={optIdx} className="group/opt flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100 hover:border-primary-100 transition-all">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={opt}
+                                                                        onChange={(e) => {
+                                                                            const newOpts = [...field.options];
+                                                                            newOpts[optIdx] = e.target.value;
+                                                                            handleUpdateField(index, 'options', newOpts);
+                                                                        }}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') {
+                                                                                const currentOptions = Array.isArray(field.options) ? field.options : [];
+                                                                                handleUpdateField(index, 'options', [...currentOptions, '']);
+                                                                            }
+                                                                        }}
+                                                                        className="flex-1 bg-white border-none text-gray-800 text-xs font-semibold rounded-lg p-2 focus:ring-2 focus:ring-primary-500/20 outline-none"
+                                                                        placeholder={`Option ${optIdx + 1}`}
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const newOpts = field.options.filter((_, i) => i !== optIdx);
+                                                                            handleUpdateField(index, 'options', newOpts);
+                                                                        }}
+                                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover/opt:opacity-100"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                            {(Array.isArray(field.options) ? field.options : []).length === 0 && (
+                                                                <p className="text-[10px] text-gray-400 italic col-span-2 py-2 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                                                    No options added. Click "Add Option" to start.
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
 
@@ -513,7 +555,11 @@ export default function Templates() {
                                                         <div className="space-y-3">
                                                             {(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).map((cond, condIdx) => {
                                                                 const parentField = fields.find(f => f.id === cond.fieldId);
-                                                                const hasOptions = parentField && (parentField.type === 'select' || parentField.type === 'radio') && parentField.options?.length > 0;
+                                                                const parentOptions = parentField ?
+                                                                    (Array.isArray(parentField.options) ? parentField.options :
+                                                                        (typeof parentField.options === 'string' ? parentField.options.split(',').map(o => o.trim()) : []))
+                                                                    : [];
+                                                                const hasOptions = parentField && (parentField.type === 'select' || parentField.type === 'radio') && parentOptions.length > 0;
 
                                                                 return (
                                                                     <div key={condIdx} className="flex gap-2 items-end group/cond">
@@ -554,7 +600,7 @@ export default function Templates() {
                                                                                             className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all appearance-none cursor-pointer"
                                                                                         >
                                                                                             <option value="">Select Value...</option>
-                                                                                            {parentField.options.map(opt => (
+                                                                                            {parentOptions.filter(o => o && o.trim()).map(opt => (
                                                                                                 <option key={opt} value={opt}>{opt}</option>
                                                                                             ))}
                                                                                         </select>
