@@ -525,7 +525,7 @@ export default function ValuationForm() {
     }
 
     return (
-        <div className="pb-24 md:pb-0">
+        <div className="pb-32 md:pb-0">
             <div className="flex items-center gap-4 mb-6 sticky top-0 bg-gray-50 pt-2 pb-4 z-10 border-b border-gray-200 md:border-none md:static">
                 <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-full border border-gray-200 hover:bg-gray-100 transition-colors">
                     <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -541,7 +541,7 @@ export default function ValuationForm() {
             <form onSubmit={handleSubmit((data) => handleSave(data, 'Completed'), (errors) => {
                 console.error("Form Validation Failed:", errors);
                 alert("Validation Failed. Please check all the correctly highlighted fields! Note: " + Object.keys(errors).join(', '));
-            })} className="space-y-8 bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+            })} className="space-y-6 md:space-y-8 bg-white p-4 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
 
 
                 {/* Dynamic Fields rendering by sections */}
@@ -689,27 +689,29 @@ export default function ValuationForm() {
                     </div>
                 </div>
 
-                {/* Floating Save Button */}
-                <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:bottom-8 z-50 flex flex-col sm:flex-row shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-primary-500/30 rounded-xl md:rounded-full bg-white overflow-hidden">
+                {/* Floating Save Button Bar - Elevated to clear mobile bottom nav */}
+                <div className="fixed bottom-[88px] md:bottom-8 left-4 right-4 md:left-auto md:right-8 z-50 flex shadow-2xl rounded-2xl md:rounded-full bg-white border border-primary-100 overflow-hidden ring-4 ring-black/5">
                     <button
                         type="button"
                         disabled={saving}
                         onClick={() => handleSave(getValues(), 'Draft')}
-                        className="w-full sm:w-auto flex justify-center items-center gap-2 py-3.5 px-6 border-b sm:border-b-0 sm:border-r border-gray-200 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 md:flex-none flex justify-center items-center gap-2 py-3 px-4 md:px-6 border-r border-gray-100 text-xs md:text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 active:bg-gray-100 transition-all disabled:opacity-50"
                     >
-                        Save as Draft
+                        Save Draft
                     </button>
                     <button
                         type="submit"
                         disabled={saving}
-                        className="w-full sm:w-auto md:min-w-[200px] flex justify-center items-center gap-2 py-3.5 px-8 md:px-10 border border-transparent text-lg font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-[2] md:min-w-[200px] flex justify-center items-center gap-2 py-3.5 px-6 md:px-10 text-sm md:text-base font-bold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 transition-all disabled:opacity-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                     >
                         {saving ? (
                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         ) : (
                             <>
-                                <Save className="w-5 h-5" />
-                                {reportId ? (reportStatus === 'Completed' ? 'Save Changes' : 'Complete Valuation') : 'Complete Valuation'}
+                                <Save className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="whitespace-nowrap">
+                                    {reportId ? (reportStatus === 'Completed' ? 'Save Changes' : 'Complete') : 'Complete Valuation'}
+                                </span>
                             </>
                         )}
                     </button>
