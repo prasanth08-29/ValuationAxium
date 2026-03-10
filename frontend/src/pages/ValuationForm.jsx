@@ -646,7 +646,6 @@ export default function ValuationForm() {
                             photos={photos.guideline}
                             setPhotos={setPhotos}
                             label="Upload Guideline Value"
-                            withGeo={true}
                         />
                     </div>
 
@@ -679,17 +678,13 @@ export default function ValuationForm() {
                                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
                                 Property Images
                             </h4>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded">Auto Geo-Tagging</span>
-                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
-                            </div>
+                            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
                         </div>
                         <ImageUploadZone
                             category="property"
                             photos={photos.property}
                             setPhotos={setPhotos}
                             label="Upload Property Photos"
-                            withGeo={true}
                         />
                     </div>
                 </div>
