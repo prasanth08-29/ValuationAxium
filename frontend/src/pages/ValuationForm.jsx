@@ -290,8 +290,41 @@ export default function ValuationForm() {
 
     const steps = useMemo(() => {
         if (!template || !template.sections) return [];
-        const sectionSteps = template.sections.map(s => ({ type: 'section', content: s }));
-        return [...sectionSteps, { type: 'photos', title: 'Inspection Media' }];
+
+        const allSteps = [];
+
+        template.sections.forEach(section => {
+            let currentFields = [];
+            // Default to section title for fields before the first heading
+            let currentTitle = section.title;
+
+            section.fields.forEach(field => {
+                if (field.type === 'heading') {
+                    // If we find a heading and have accumulated fields, push them as a step
+                    if (currentFields.length > 0) {
+                        allSteps.push({
+                            type: 'section',
+                            content: { title: currentTitle, fields: currentFields }
+                        });
+                        currentFields = [];
+                    }
+                    // Start a new group where this heading's label is the title
+                    currentTitle = field.label;
+                } else {
+                    currentFields.push(field);
+                }
+            });
+
+            // Push any remaining fields in the section
+            if (currentFields.length > 0) {
+                allSteps.push({
+                    type: 'section',
+                    content: { title: currentTitle, fields: currentFields }
+                });
+            }
+        });
+
+        return [...allSteps, { type: 'photos', title: 'Inspection Media' }];
     }, [template]);
 
     const handleNext = async () => {
