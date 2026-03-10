@@ -486,67 +486,110 @@ export default function Templates() {
                                                     <div className="mt-6 border-t border-gray-100 pt-4 pl-11">
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h4 className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Conditional Visibility</h4>
-                                                            <button
-                                                                onClick={() => {
-                                                                    const currentConditions = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []);
-                                                                    handleUpdateField(index, 'conditions', [...currentConditions, { fieldId: '', value: '' }]);
-                                                                    handleUpdateField(index, 'dependsOn', undefined);
-                                                                    handleUpdateField(index, 'dependsOnValue', undefined);
-                                                                }}
-                                                                className="text-[10px] font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 px-2 py-1 bg-primary-50 rounded-lg transition-colors"
-                                                            >
-                                                                <Plus className="w-3 h-3" />
-                                                                Add Condition
-                                                            </button>
+                                                            <div className="relative group/add">
+                                                                <select
+                                                                    value=""
+                                                                    onChange={(e) => {
+                                                                        const fieldId = e.target.value;
+                                                                        if (!fieldId) return;
+                                                                        const currentConditions = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []);
+                                                                        handleUpdateField(index, 'conditions', [...currentConditions, { fieldId, value: '' }]);
+                                                                        handleUpdateField(index, 'dependsOn', undefined);
+                                                                        handleUpdateField(index, 'dependsOnValue', undefined);
+                                                                    }}
+                                                                    className="text-[10px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors outline-none cursor-pointer appearance-none pr-8"
+                                                                >
+                                                                    <option value="">+ Add Visibility Rule for...</option>
+                                                                    {fields.filter((f, i) => i !== index && !(field.conditions || []).find(c => c.fieldId === f.id)).map(f => (
+                                                                        <option key={f.id} value={f.id}>{f.label || f.id}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                    <Plus className="w-3 h-3 text-primary-600" />
+                                                                </div>
+                                                            </div>
                                                         </div>
 
                                                         <div className="space-y-3">
-                                                            {(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).map((cond, condIdx) => (
-                                                                <div key={condIdx} className="flex gap-2 items-end">
-                                                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                                                                        <div className="relative">
-                                                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Depends on Field</label>
-                                                                            <select
-                                                                                value={cond.fieldId}
-                                                                                onChange={(e) => {
-                                                                                    const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
-                                                                                    newConds[condIdx] = { ...newConds[condIdx], fieldId: e.target.value };
-                                                                                    handleUpdateField(index, 'conditions', newConds);
-                                                                                }}
-                                                                                className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all appearance-none cursor-pointer"
-                                                                            >
-                                                                                <option value="">Select Field...</option>
-                                                                                {fields.filter((_, i) => i !== index).map(f => (
-                                                                                    <option key={f.id} value={f.id}>{f.label || f.id}</option>
-                                                                                ))}
-                                                                            </select>
+                                                            {(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).map((cond, condIdx) => {
+                                                                const parentField = fields.find(f => f.id === cond.fieldId);
+                                                                const hasOptions = parentField && (parentField.type === 'select' || parentField.type === 'radio') && parentField.options?.length > 0;
+
+                                                                return (
+                                                                    <div key={condIdx} className="flex gap-2 items-end group/cond">
+                                                                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 group-hover/cond:border-primary-200 transition-colors">
+                                                                            <div className="relative">
+                                                                                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Depends on Field</label>
+                                                                                <div className="relative">
+                                                                                    <select
+                                                                                        value={cond.fieldId}
+                                                                                        onChange={(e) => {
+                                                                                            const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
+                                                                                            newConds[condIdx] = { ...newConds[condIdx], fieldId: e.target.value, value: '' }; // Reset value when field changes
+                                                                                            handleUpdateField(index, 'conditions', newConds);
+                                                                                        }}
+                                                                                        className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all appearance-none cursor-pointer"
+                                                                                    >
+                                                                                        <option value="">Select Field...</option>
+                                                                                        {fields.filter((_, i) => i !== index).map(f => (
+                                                                                            <option key={f.id} value={f.id}>{f.label || f.id}</option>
+                                                                                        ))}
+                                                                                    </select>
+                                                                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="relative">
+                                                                                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Show if Value is</label>
+                                                                                {hasOptions ? (
+                                                                                    <div className="relative">
+                                                                                        <select
+                                                                                            value={cond.value}
+                                                                                            onChange={(e) => {
+                                                                                                const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
+                                                                                                newConds[condIdx] = { ...newConds[condIdx], value: e.target.value };
+                                                                                                handleUpdateField(index, 'conditions', newConds);
+                                                                                            }}
+                                                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all appearance-none cursor-pointer"
+                                                                                        >
+                                                                                            <option value="">Select Value...</option>
+                                                                                            {parentField.options.map(opt => (
+                                                                                                <option key={opt} value={opt}>{opt}</option>
+                                                                                            ))}
+                                                                                        </select>
+                                                                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                                            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={cond.value}
+                                                                                        onChange={(e) => {
+                                                                                            const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
+                                                                                            newConds[condIdx] = { ...newConds[condIdx], value: e.target.value };
+                                                                                            handleUpdateField(index, 'conditions', newConds);
+                                                                                        }}
+                                                                                        placeholder="e.g., Yes"
+                                                                                        className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all"
+                                                                                    />
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="relative">
-                                                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Show if Value is</label>
-                                                                            <input
-                                                                                type="text"
-                                                                                value={cond.value}
-                                                                                onChange={(e) => {
-                                                                                    const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
-                                                                                    newConds[condIdx] = { ...newConds[condIdx], value: e.target.value };
-                                                                                    handleUpdateField(index, 'conditions', newConds);
-                                                                                }}
-                                                                                placeholder="e.g., Yes"
-                                                                                className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all"
-                                                                            />
-                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const newConds = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter((_, i) => i !== condIdx);
+                                                                                handleUpdateField(index, 'conditions', newConds);
+                                                                            }}
+                                                                            className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-white border border-gray-200 rounded-lg hover:border-red-100 hover:bg-red-50 mb-1"
+                                                                            title="Delete Condition"
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </button>
                                                                     </div>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const newConds = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter((_, i) => i !== condIdx);
-                                                                            handleUpdateField(index, 'conditions', newConds);
-                                                                        }}
-                                                                        className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-white border border-gray-200 rounded-lg hover:border-red-100 hover:bg-red-50 mb-1"
-                                                                    >
-                                                                        <Trash2 className="w-4 h-4" />
-                                                                    </button>
-                                                                </div>
-                                                            ))}
+                                                                );
+                                                            })}
                                                         </div>
                                                         <p className="text-[10px] text-gray-400 mt-2 italic">* Field will show only if ALL conditions are met (AND logic).</p>
                                                     </div>
