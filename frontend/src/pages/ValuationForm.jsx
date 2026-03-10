@@ -82,40 +82,90 @@ const captureLocation = () => {
         }
         navigator.geolocation.getCurrentPosition(
             (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            () => resolve(null),
+            (err) => {
+                console.warn("Location capture failed:", err);
+                resolve(null);
+            },
             { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
     });
 };
 
+const compressImage = (base64Str, maxWidth = 1200, maxHeight = 1200, quality = 0.7) => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(base64Str); // Fallback to original if compression fails
+    });
+};
+
 function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }) {
+    const [isProcessing, setIsProcessing] = useState(false);
+
     const handleFiles = async (e, isCamera = false) => {
         const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        setIsProcessing(true);
         let geoData = null;
 
-        if (isCamera && withGeo) {
-            geoData = await captureLocation();
+        try {
+            if (isCamera && withGeo) {
+                geoData = await captureLocation();
+            }
+
+            const newPhotos = await Promise.all(files.map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64 = reader.result;
+                        // Compress high-res photos to stay within payload and DB limits
+                        const compressed = await compressImage(base64);
+                        resolve({
+                            data: compressed,
+                            lat: geoData?.lat,
+                            lng: geoData?.lng,
+                            timestamp: new Date().toISOString()
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }));
+
+            setPhotos(prev => ({
+                ...prev,
+                [category]: [...prev[category], ...newPhotos]
+            }));
+        } catch (err) {
+            console.error("Image processing error:", err);
+            alert("Failed to process images. Please try again.");
+        } finally {
+            setIsProcessing(false);
+            e.target.value = ''; // Reset input to allow re-uploading same file if needed
         }
-
-        const newPhotos = await Promise.all(files.map(file => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    resolve({
-                        data: reader.result,
-                        lat: geoData?.lat,
-                        lng: geoData?.lng,
-                        timestamp: new Date().toISOString()
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-        }));
-
-        setPhotos(prev => ({
-            ...prev,
-            [category]: [...prev[category], ...newPhotos]
-        }));
     };
 
     const removePhoto = (idx) => {
@@ -128,18 +178,25 @@ function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:bg-gray-50 transition-colors cursor-pointer group flex flex-col items-center justify-center bg-white">
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e)} />
+                <label className={`border-2 border-dashed border-gray-200 rounded-xl p-5 text-center transition-colors cursor-pointer group flex flex-col items-center justify-center bg-white ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e)} disabled={isProcessing} />
                     <UploadCloud className="w-5 h-5 text-gray-400 group-hover:text-primary-500 mb-2 transition-colors" />
                     <p className="text-xs font-semibold text-gray-600">Gallery</p>
                 </label>
 
-                <label className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:bg-gray-50 transition-colors cursor-pointer group flex flex-col items-center justify-center bg-white">
-                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFiles(e, true)} />
+                <label className={`border-2 border-dashed border-gray-200 rounded-xl p-5 text-center transition-colors cursor-pointer group flex flex-col items-center justify-center bg-white ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFiles(e, true)} disabled={isProcessing} />
                     <Camera className="w-5 h-5 text-gray-400 group-hover:text-green-500 mb-2 transition-colors" />
                     <p className="text-xs font-semibold text-gray-600">Camera</p>
                 </label>
             </div>
+
+            {isProcessing && (
+                <div className="flex items-center gap-2 text-primary-600 text-xs font-medium bg-primary-50 p-2 rounded-lg">
+                    <div className="w-3 h-3 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                    Processing images...
+                </div>
+            )}
 
             {photos.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
