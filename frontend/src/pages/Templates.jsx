@@ -482,6 +482,41 @@ export default function Templates() {
                                                     </div>
                                                 )}
 
+                                                {activeEditIndex === index && field.type !== 'heading' && field.type !== 'subheading' && (
+                                                    <div className="mt-6 border-t border-gray-100 pt-4 pl-11">
+                                                        <h4 className="text-[10px] font-bold text-primary-500 uppercase tracking-widest mb-4">Conditional Visibility</h4>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <div className="relative">
+                                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Depends on Field</label>
+                                                                <select
+                                                                    value={field.dependsOn || ''}
+                                                                    onChange={(e) => handleUpdateField(index, 'dependsOn', e.target.value)}
+                                                                    className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all appearance-none cursor-pointer"
+                                                                >
+                                                                    <option value="">No Dependency</option>
+                                                                    {fields.filter((_, i) => i !== index).map(f => (
+                                                                        <option key={f.id} value={f.id}>{f.label || f.id}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <div className="absolute right-3 top-[34px] pointer-events-none">
+                                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative">
+                                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Show when value is</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={field.dependsOnValue || ''}
+                                                                    onChange={(e) => handleUpdateField(index, 'dependsOnValue', e.target.value)}
+                                                                    placeholder="e.g., Yes"
+                                                                    className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-400 mt-2 italic">* This field will only appear if the selected field matches this exact value.</p>
+                                                    </div>
+                                                )}
+
                                                 {activeEditIndex === index && field.type === 'button' && (
                                                     <div className="w-full space-y-1 mt-4 pl-8 sm:pl-11 relative">
                                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Button Action</label>

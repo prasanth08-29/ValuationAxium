@@ -458,6 +458,14 @@ app.post('/api/export/word', async (req, res) => {
                     sec.fields.forEach(field => {
                         if (field.type === 'button') return;
 
+                        // Dependency check for export visibility
+                        if (field.dependsOn) {
+                            const parentValue = data[field.dependsOn];
+                            if (String(parentValue || '') !== String(field.dependsOnValue || '')) {
+                                return; // Skip hidden field in export too
+                            }
+                        }
+
                         if (field.type === 'heading') {
                             flushTable();
                             children.push(new Paragraph({
