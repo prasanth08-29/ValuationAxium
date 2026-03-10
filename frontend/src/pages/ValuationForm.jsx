@@ -77,16 +77,33 @@ function BulletInput({ value = [], onChange, label, error, register, id }) {
 const captureLocation = () => {
     return new Promise((resolve) => {
         if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
             resolve(null);
             return;
         }
+
+        if (!window.isSecureContext) {
+            alert("Location capture requires a secure (HTTPS) connection. Please ensure you are using HTTPS.");
+            resolve(null);
+            return;
+        }
+
         navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            (pos) => {
+                console.log("Location captured:", pos.coords.latitude, pos.coords.longitude);
+                resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            },
             (err) => {
+                let msg = "Could not capture location.";
+                if (err.code === 1) msg = "Location permission denied. Please enable GPS and allow browser access.";
+                else if (err.code === 2) msg = "Location unavailable (GPS signal weak).";
+                else if (err.code === 3) msg = "Location request timed out.";
+
                 console.warn("Location capture failed:", err);
+                alert(msg);
                 resolve(null);
             },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
     });
 };
@@ -203,10 +220,10 @@ function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }
                     {photos.map((photo, idx) => (
                         <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-white">
                             <img src={photo.data} alt="Upload" className="w-full h-full object-cover" />
-                            {photo.lat && (
+                            {photo.lat != null && photo.lng != null && (
                                 <div className="absolute top-1 left-1 bg-black/60 text-white text-[8px] px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
                                     <MapPin className="w-2 h-2" />
-                                    {photo.lat.toFixed(4)}, {photo.lng.toFixed(4)}
+                                    {Number(photo.lat).toFixed(4)}, {Number(photo.lng).toFixed(4)}
                                 </div>
                             )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -629,6 +646,7 @@ export default function ValuationForm() {
                             photos={photos.guideline}
                             setPhotos={setPhotos}
                             label="Upload Guideline Value"
+                            withGeo={true}
                         />
                     </div>
 
@@ -661,13 +679,17 @@ export default function ValuationForm() {
                                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
                                 Property Images
                             </h4>
-                            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded">Auto Geo-Tagging</span>
+                                <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
+                            </div>
                         </div>
                         <ImageUploadZone
                             category="property"
                             photos={photos.property}
                             setPhotos={setPhotos}
                             label="Upload Property Photos"
+                            withGeo={true}
                         />
                     </div>
                 </div>
