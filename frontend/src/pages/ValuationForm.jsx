@@ -327,20 +327,26 @@ export default function ValuationForm() {
         return [...allSteps, { type: 'photos', title: 'Inspection Media' }];
     }, [template]);
 
+    const [expandedStep, setExpandedStep] = useState(0);
+
     const handleNext = async () => {
         // Find fields in current section to validate
-        if (steps[activeStep].type === 'section') {
-            const currentFields = steps[activeStep].content.fields.map(f => f.id);
+        if (steps[expandedStep].type === 'section') {
+            const currentFields = steps[expandedStep].content.fields.map(f => f.id);
             const isValid = await trigger(currentFields);
             if (!isValid) return;
         }
-        setActiveStep(prev => Math.min(prev + 1, steps.length - 1));
-        window.scrollTo(0, 0);
+        setExpandedStep(prev => Math.min(prev + 1, steps.length - 1));
+
+        // Dynamic scroll to the newly opened section header
+        setTimeout(() => {
+            const element = document.getElementById(`step-${expandedStep + 1}`);
+            if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     };
 
-    const handleBack = () => {
-        setActiveStep(prev => Math.max(prev - 1, 0));
-        window.scrollTo(0, 0);
+    const toggleStep = (idx) => {
+        setExpandedStep(expandedStep === idx ? null : idx);
     };
 
     useEffect(() => {
@@ -592,252 +598,189 @@ export default function ValuationForm() {
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${reportStatus === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                             {reportStatus}
                         </span>
-                        {steps.length > 0 && (
-                            <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
-                                Step {activeStep + 1} of {steps.length}
-                            </span>
-                        )}
+                        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            {steps.length} Sections
+                        </span>
                     </div>
                 </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-8 bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                <div
-                    className="bg-primary-500 h-full transition-all duration-500 ease-out"
-                    style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
-                ></div>
+            {/* Overall Progress */}
+            <div className="mb-8">
+                <div className="flex justify-between text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-tighter">
+                    <span>Overall Completion</span>
+                    <span>{Math.round(((expandedStep + 1) / steps.length) * 100)}%</span>
+                </div>
+                <div className="bg-gray-200 h-1 rounded-full overflow-hidden">
+                    <div
+                        className="bg-primary-500 h-full transition-all duration-500 ease-out"
+                        style={{ width: `${((expandedStep + 1) / steps.length) * 100}%` }}
+                    ></div>
+                </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-                {/* Desktop Step Sidebar */}
-                <div className="hidden lg:block w-72 h-[calc(100vh-200px)] sticky top-24 overflow-y-auto no-scrollbar pr-2">
-                    <div className="space-y-1">
-                        {steps.map((step, idx) => (
-                            <button
-                                key={idx}
-                                type="button"
-                                onClick={() => { setActiveStep(idx); window.scrollTo(0, 0); }}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 ${activeStep === idx ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30' : 'bg-white border border-gray-100 text-gray-600 hover:border-primary-300'}`}
-                            >
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${activeStep === idx ? 'bg-white/20' : 'bg-gray-100'}`}>
-                                    {idx + 1}
-                                </div>
-                                <span className={`text-xs font-bold truncate ${activeStep === idx ? 'text-white' : 'text-gray-700'}`}>
-                                    {step.type === 'photos' ? 'Photos' : step.content.title}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
+            <div className="w-full">
                 <form onSubmit={handleSubmit((data) => handleSave(data, 'Completed'), (errors) => {
                     console.error("Form Validation Failed:", errors);
-                    alert("Validation Failed. Please check all the correctly highlighted fields!");
-                })} className="flex-1 w-full space-y-6 md:space-y-8 bg-white p-4 md:p-8 rounded-2xl border border-gray-100 shadow-sm relative">
+                    alert("Validation Failed. Please check the highlighted fields in the sections!");
+                })} className="space-y-4 relative">
 
-
-                    {/* Render Current Step */}
-                    {steps[activeStep]?.type === 'section' && (
-                        <div className="border border-gray-100 rounded-xl p-4 md:p-6 bg-gray-50/50">
-                            <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
-                                {steps[activeStep].content.title}
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {steps[activeStep].content.fields.map(field => (
-                                    <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading') ? 'md:col-span-2' : ''}>
-                                        {field.type !== 'heading' && (
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                {field.label} {field.required && <span className="text-red-500">*</span>}
-                                            </label>
-                                        )}
-
-                                        {field.type === 'heading' ? (
-                                            <h4 className="text-base font-bold text-gray-800 border-b border-gray-200 pb-2 mt-4 mb-2">{field.label}</h4>
-                                        ) : field.isList ? (
-                                            <div className="w-full">
-                                                <Controller
-                                                    name={field.id}
-                                                    control={control}
-                                                    defaultValue={[]}
-                                                    render={({ field: { onChange, value } }) => (
-                                                        <BulletInput
-                                                            value={value}
-                                                            onChange={onChange}
-                                                            label={field.label}
-                                                        />
-                                                    )}
-                                                />
-                                            </div>
-                                        ) : field.type === 'textarea' ? (
-                                            <textarea
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
-                                                {...register(field.id)}
-                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
-                                            />
-                                        ) : field.type === 'select' ? (
-                                            <select
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
-                                                {...register(field.id)}
-                                            >
-                                                <option value="">Select {field.label}</option>
-                                                {field.options?.map(opt => (
-                                                    <option key={opt} value={opt}>{opt}</option>
-                                                ))}
-                                            </select>
-                                        ) : field.type === 'button' ? (
-                                            <button
-                                                type={field.buttonType || 'button'}
-                                                className="w-full px-4 py-3 rounded-xl border border-transparent shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-500/30 transition-all font-bold"
-                                                onClick={(e) => {
-                                                    if (field.buttonType !== 'submit' && field.buttonType !== 'reset') {
-                                                        e.preventDefault();
-                                                        alert(`${field.label} clicked`);
-                                                    }
-                                                }}
-                                            >
-                                                {field.label}
-                                            </button>
-                                        ) : (
-                                            <input
-                                                type={field.type}
-                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
-                                                {...register(field.id)}
-                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
-                                            />
-                                        )}
-                                        {errors[field.id] && (
-                                            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                                                <AlertCircle className="w-4 h-4" />
-                                                {errors[field.id]?.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Render Photos Step */}
-                    {steps[activeStep]?.type === 'photos' && (
-                        <div className="border border-gray-100 rounded-xl p-4 md:p-6 bg-gray-50/50 space-y-10">
-                            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3 border-b border-gray-200 pb-4">
-                                <ImageIcon className="w-6 h-6 text-primary-500" />
-                                Inspection Media
-                            </h3>
-
-                            {/* 1. Guideline Value Section */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-600 text-xs">1</span>
-                                        Guideline Value
-                                    </h4>
-                                    <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.guideline.length} Images</span>
-                                </div>
-                                <ImageUploadZone
-                                    category="guideline"
-                                    photos={photos.guideline}
-                                    setPhotos={setPhotos}
-                                    label="Upload Guideline Value"
-                                />
-                            </div>
-
-                            {/* 2. Location Map Section */}
-                            <div className="space-y-4 border-t border-gray-200 pt-8">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs">2</span>
-                                        Location Map
-                                    </h4>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded">Auto Geo-Tagging</span>
-                                        <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.location.length} Images</span>
-                                    </div>
-                                </div>
-                                <ImageUploadZone
-                                    category="location"
-                                    photos={photos.location}
-                                    setPhotos={setPhotos}
-                                    label="Upload Location Map"
-                                    withGeo={true}
-                                />
-                            </div>
-
-                            {/* 3. Property Images Section */}
-                            <div className="space-y-4 border-t border-gray-200 pt-8">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
-                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
-                                        Property Images
-                                    </h4>
-                                    <span className="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-1 rounded-md">{photos.property.length} Images</span>
-                                </div>
-                                <ImageUploadZone
-                                    category="property"
-                                    photos={photos.property}
-                                    setPhotos={setPhotos}
-                                    label="Upload Property Photos"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Floating Navigation & Save Bar */}
-                    <div className="fixed bottom-[88px] md:bottom-8 left-4 right-4 md:left-auto md:right-8 z-50 flex flex-col gap-4">
-                        {/* Stepper Navigation */}
-                        <div className="flex gap-2 w-full md:w-auto self-end">
-                            {activeStep > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={handleBack}
-                                    className="flex-1 md:flex-none px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl shadow-lg hover:bg-gray-50 flex items-center justify-center gap-2 transition-all"
-                                >
-                                    Back
-                                </button>
-                            )}
-                            {activeStep < steps.length - 1 && (
-                                <button
-                                    type="button"
-                                    onClick={handleNext}
-                                    className="flex-[2] md:min-w-[150px] px-6 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 flex items-center justify-center gap-2 transition-all"
-                                >
-                                    Next Section
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Final Submission Bar (Only shows save options) */}
-                        <div className="flex shadow-2xl rounded-2xl md:rounded-full bg-white border border-primary-100 overflow-hidden ring-4 ring-black/5">
+                    {steps.map((step, idx) => (
+                        <div key={idx} id={`step-${idx}`} className={`border overflow-hidden rounded-2xl transition-all duration-300 ${expandedStep === idx ? 'border-primary-100 bg-white shadow-xl ring-1 ring-primary-50' : 'border-gray-100 bg-white/60 hover:bg-white'}`}>
+                            {/* Accordion Header */}
                             <button
                                 type="button"
-                                disabled={saving}
-                                onClick={() => handleSave(getValues(), 'Draft')}
-                                className="flex-1 md:flex-none flex justify-center items-center gap-2 py-3 px-4 md:px-6 border-r border-gray-100 text-xs md:text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-50"
+                                onClick={() => toggleStep(idx)}
+                                className={`w-full flex items-center justify-between p-4 md:p-5 text-left transition-colors ${expandedStep === idx ? 'bg-primary-50/30' : ''}`}
                             >
-                                Save Draft
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${expandedStep === idx ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                        {idx + 1}
+                                    </div>
+                                    <h3 className={`text-sm md:text-base font-bold transition-colors ${expandedStep === idx ? 'text-primary-700' : 'text-gray-700'}`}>
+                                        {step.type === 'photos' ? 'Inspection Media & Photos' : step.content.title}
+                                    </h3>
+                                </div>
+                                <div className={`transform transition-transform duration-300 ${expandedStep === idx ? 'rotate-180 text-primary-500' : 'text-gray-400'}`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
                             </button>
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className={`flex-[2] md:min-w-[200px] flex justify-center items-center gap-2 py-3.5 px-6 md:px-10 text-sm md:text-base font-bold text-white transition-all disabled:opacity-50 ${activeStep === steps.length - 1 ? 'bg-green-600 hover:bg-green-700' : 'bg-primary-600 hover:bg-primary-700'}`}
-                            >
-                                {saving ? (
-                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                ) : (
-                                    <>
-                                        <Save className="w-4 h-4 md:w-5 md:h-5" />
-                                        <span className="whitespace-nowrap">
-                                            {activeStep === steps.length - 1 ? (reportId ? 'Submit Changes' : 'Complete Valuation') : 'Instant Submit'}
-                                        </span>
-                                    </>
-                                )}
-                            </button>
+
+                            {/* Accordion Content */}
+                            {expandedStep === idx && (
+                                <div className="p-4 md:p-8 border-t border-gray-100 animate-in fade-in slide-in-from-top-4 duration-300">
+                                    {step.type === 'section' ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {step.content.fields.map(field => (
+                                                <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading') ? 'md:col-span-2' : ''}>
+                                                    {field.type !== 'heading' && (
+                                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                            {field.label} {field.required && <span className="text-red-500">*</span>}
+                                                        </label>
+                                                    )}
+
+                                                    {field.isList ? (
+                                                        <div className="w-full">
+                                                            <Controller
+                                                                name={field.id}
+                                                                control={control}
+                                                                defaultValue={[]}
+                                                                render={({ field: { onChange, value } }) => (
+                                                                    <BulletInput
+                                                                        value={value}
+                                                                        onChange={onChange}
+                                                                        label={field.label}
+                                                                    />
+                                                                )}
+                                                            />
+                                                        </div>
+                                                    ) : field.type === 'textarea' ? (
+                                                        <textarea
+                                                            className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
+                                                            {...register(field.id)}
+                                                            placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                                        />
+                                                    ) : field.type === 'select' ? (
+                                                        <select
+                                                            className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
+                                                            {...register(field.id)}
+                                                        >
+                                                            <option value="">Select {field.label}</option>
+                                                            {field.options?.map(opt => (
+                                                                <option key={opt} value={opt}>{opt}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : (
+                                                        <input
+                                                            type={field.type}
+                                                            className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
+                                                            {...register(field.id)}
+                                                            placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                                        />
+                                                    )}
+                                                    {errors[field.id] && (
+                                                        <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                                            <AlertCircle className="w-4 h-4" />
+                                                            {errors[field.id]?.message}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Section Navigation Button */}
+                                            <div className="md:col-span-2 pt-6 border-t border-gray-50 flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleNext}
+                                                    className="px-8 py-3 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all flex items-center gap-2"
+                                                >
+                                                    Next Section
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-10">
+                                            {/* Photos Step Rendering */}
+                                            <div className="space-y-6">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 text-primary-600 text-xs">1</span>
+                                                        Guideline Value
+                                                    </h4>
+                                                </div>
+                                                <ImageUploadZone category="guideline" photos={photos.guideline} setPhotos={setPhotos} label="Upload Guideline Value" />
+                                            </div>
+
+                                            <div className="space-y-6 border-t border-gray-100 pt-8">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs">2</span>
+                                                        Location Map
+                                                    </h4>
+                                                </div>
+                                                <ImageUploadZone category="location" photos={photos.location} setPhotos={setPhotos} label="Upload Location Map" withGeo={true} />
+                                            </div>
+
+                                            <div className="space-y-6 border-t border-gray-100 pt-8">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">3</span>
+                                                        Property Images
+                                                    </h4>
+                                                </div>
+                                                <ImageUploadZone category="property" photos={photos.property} setPhotos={setPhotos} label="Upload Property Photos" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
+                    ))}
+
+                    {/* Floating Save Bar */}
+                    <div className="fixed bottom-[88px] md:bottom-8 left-4 right-4 md:left-auto md:right-8 z-50 flex shadow-2xl rounded-2xl md:rounded-full bg-white border border-primary-100 overflow-hidden ring-4 ring-black/5 max-w-lg mx-auto md:max-w-none">
+                        <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => handleSave(getValues(), 'Draft')}
+                            className="flex-1 md:flex-none flex justify-center items-center gap-2 py-3 px-4 md:px-6 border-r border-gray-100 text-xs md:text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 transition-all disabled:opacity-50"
+                        >
+                            Save Draft
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className={`flex-[2] md:min-w-[200px] flex justify-center items-center gap-2 py-3.5 px-6 md:px-10 text-sm md:text-base font-bold text-white transition-all disabled:opacity-50 bg-primary-600 hover:bg-primary-700`}
+                        >
+                            {saving ? (
+                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            ) : (
+                                <><Save className="w-4 h-4 md:w-5 md:h-5" /><span className="whitespace-nowrap">Complete Valuation</span></>
+                            )}
+                        </button>
                     </div>
                 </form>
-                {/* Desktop Sidebar Navigation Context - Close the wrapper div */}
-                {steps[activeStep]?.type === 'photos' && <div className="hidden">Photos Loaded</div>}
             </div>
         </div>
     );
