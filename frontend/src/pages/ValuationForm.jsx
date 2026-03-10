@@ -655,18 +655,16 @@ export default function ValuationForm() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {step.content.fields.map(field => {
                                                 // Conditional visibility check
-                                                const conditions = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []);
+                                                const conditions = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
 
                                                 if (conditions.length > 0) {
                                                     const allMet = conditions.every(cond => {
-                                                        if (!cond.fieldId) return true;
                                                         const parentValue = formValues[cond.fieldId];
-                                                        return String(parentValue || '') === String(cond.value || '');
+                                                        return String(parentValue || '').toLowerCase() === String(cond.value || '').toLowerCase();
                                                     });
 
                                                     if (!allMet) return null;
                                                 }
-
                                                 return (
                                                     <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading' || field.type === 'subheading') ? 'md:col-span-2' : ''}>
                                                         {field.type !== 'heading' && field.type !== 'subheading' && (
@@ -713,18 +711,21 @@ export default function ValuationForm() {
                                                                 ))}
                                                             </select>
                                                         ) : field.type === 'radio' ? (
-                                                            <div className="flex flex-wrap gap-x-8 gap-y-4 mt-2 p-2 bg-gray-50/50 rounded-xl border border-gray-100/50">
-                                                                {field.options?.map(opt => (
-                                                                    <label key={opt} className="flex items-center gap-3 cursor-pointer group py-1">
+                                                            <div className="flex flex-wrap gap-x-6 gap-y-3 mt-2 p-3 bg-gray-50/50 rounded-xl border border-gray-200/50 min-h-[52px]">
+                                                                {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).map(opt => (
+                                                                    <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-3 bg-white rounded-lg border border-transparent hover:border-primary-200 hover:shadow-sm transition-all">
                                                                         <input
                                                                             type="radio"
                                                                             value={opt}
                                                                             {...register(field.id)}
-                                                                            className="w-5 h-5 accent-primary-600 border-gray-300 focus:ring-primary-500 cursor-pointer transition-all shadow-sm"
+                                                                            className="w-5 h-5 accent-primary-600 cursor-pointer transition-all shrink-0"
                                                                         />
-                                                                        <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-800 transition-colors">{opt}</span>
+                                                                        <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
                                                                     </label>
                                                                 ))}
+                                                                {(!field.options || field.options.length === 0) && (
+                                                                    <span className="text-xs text-gray-400 italic flex items-center p-2">No options defined in template</span>
+                                                                )}
                                                             </div>
                                                         ) : field.type === 'heading' ? null : (
                                                             <input
