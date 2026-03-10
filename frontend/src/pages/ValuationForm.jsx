@@ -713,16 +713,16 @@ export default function ValuationForm() {
                                                                 ))}
                                                             </select>
                                                         ) : field.type === 'radio' ? (
-                                                            <div className="flex flex-wrap gap-4 mt-2 p-1">
+                                                            <div className="flex flex-wrap gap-x-8 gap-y-4 mt-2 p-2 bg-gray-50/50 rounded-xl border border-gray-100/50">
                                                                 {field.options?.map(opt => (
-                                                                    <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+                                                                    <label key={opt} className="flex items-center gap-3 cursor-pointer group py-1">
                                                                         <input
                                                                             type="radio"
                                                                             value={opt}
                                                                             {...register(field.id)}
-                                                                            className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500 transition-all"
+                                                                            className="w-5 h-5 accent-primary-600 border-gray-300 focus:ring-primary-500 cursor-pointer transition-all shadow-sm"
                                                                         />
-                                                                        <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors">{opt}</span>
+                                                                        <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-800 transition-colors">{opt}</span>
                                                                     </label>
                                                                 ))}
                                                             </div>
