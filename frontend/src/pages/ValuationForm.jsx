@@ -273,7 +273,9 @@ export default function ValuationForm() {
 
                     if (field.isList || field.type === 'bullets') {
                         shape[field.id] = z.array(z.string()).optional();
-                    } else if (!isCheckboxFallback && (field.required || ['owner_name', 'property_address', 'date'].includes(field.id))) {
+                    } else if (field.type === 'checkbox' || isCheckboxFallback) {
+                        shape[field.id] = z.boolean().optional().or(z.string().optional());
+                    } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
                         shape[field.id] = z.preprocess(val => {
                             if (val === undefined || val === null) return '';
                             if (typeof val === 'boolean') return val ? 'true' : '';
@@ -755,8 +757,12 @@ export default function ValuationForm() {
                         </div>
                     </div>
 
-                    {steps.map((step, idx) => (
-                        <div key={idx} id={`step-${idx}`} className={`border overflow-hidden rounded-2xl transition-all duration-300 ${expandedStep === idx ? 'border-primary-100 bg-white shadow-xl ring-1 ring-primary-50' : 'border-gray-100 bg-white/60 hover:bg-white'}`}>
+                    {steps.map((step, idx) => {
+                        const isStepVisible = step.type === 'section' ? step.content.fields.some(f => isFieldVisible(f, formValues)) : true;
+                        if (!isStepVisible) return null;
+                        
+                        return (
+                        <div key={idx} className={`bg-white rounded-3xl overflow-hidden transition-all duration-300 ${expandedStep === idx ? 'shadow-[0_8px_30px_rgb(0,0,0,0.06)] ring-1 ring-gray-100' : 'shadow-sm border border-gray-100/50 hover:border-gray-200'}`}>
                             {/* Accordion Header */}
                             <button
                                 type="button"
@@ -944,7 +950,8 @@ export default function ValuationForm() {
                                 </div>
                             )}
                         </div>
-                    ))}
+                    );
+                })}
 
                     {/* Floating Save Bar */}
                     <div className="fixed bottom-[88px] md:bottom-8 left-4 right-4 md:left-auto md:right-8 z-50 flex shadow-2xl rounded-2xl md:rounded-full bg-white border border-primary-100 overflow-hidden ring-4 ring-black/5 max-w-lg mx-auto md:max-w-none">
