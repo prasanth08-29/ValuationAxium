@@ -712,28 +712,42 @@ export default function ValuationForm() {
                         <div className="max-w-7xl mx-auto px-4 py-2 pointer-events-auto">
                             <div className="flex justify-between items-center mb-1 border-b border-slate-700 pb-1">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-amber-400 font-bold">🛠 STICKY DEBUGGER</span>
+                                    <span className="text-amber-400 font-bold tracking-tighter">🛠 DEBUGER</span>
                                     <span className="text-slate-400">|</span>
-                                    <span className="text-blue-300">Section: {expandedStep + 1}</span>
+                                    <span className="text-blue-300">SEC {expandedStep + 1}: {steps[expandedStep]?.content?.title?.substring(0, 20)}...</span>
                                     <span className="text-slate-400">|</span>
-                                    <span className="text-purple-300">Values: {Object.keys(formValues).filter(k => formValues[k]).length} active</span>
+                                    <span className="text-purple-300">Fields: {steps[expandedStep]?.content?.fields?.length || 0}</span>
                                 </div>
                                 <button 
                                     type="button"
-                                    onClick={() => console.log('FULL FORM STATE:', { formValues, template, steps })}
-                                    className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-[8px] transition-colors"
+                                    onClick={() => {
+                                        const currentSecFields = steps[expandedStep]?.content?.fields || [];
+                                        console.log('--- SECTION FIELDS DEBUG ---');
+                                        currentSecFields.forEach(f => {
+                                            console.log(`Field: ${f.label} [ID: ${f.id}]`, { 
+                                                isVisible: isFieldVisible(f, formValues), 
+                                                value: formValues[f.id],
+                                                conditions: f.conditions,
+                                                dependsOn: f.dependsOn
+                                            });
+                                        });
+                                    }}
+                                    className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-[8px] transition-colors font-bold"
                                 >
-                                    LOG STATE TO CONSOLE
+                                    LOG SECTION FIELDS
                                 </button>
                             </div>
                             <div className="flex gap-4 overflow-x-auto pb-1 whitespace-nowrap scrollbar-hide">
-                                {template.sections.flatMap(s => s.fields || []).filter(f => f.conditions || f.dependsOn).slice(0, 30).map(f => {
+                                {steps[expandedStep]?.content?.fields?.map((f, i) => {
                                     const isVisible = isFieldVisible(f, formValues);
+                                    const isCond = !!(f.conditions || f.dependsOn);
+                                    const val = formValues[f.id];
                                     return (
-                                        <div key={f.id} className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${isVisible ? 'bg-green-500/20 text-green-400' : 'bg-slate-800 text-slate-500'}`}>
-                                            <span className="font-bold">{f.id.substring(0, 10)}:</span>
-                                            <span>{isVisible ? 'ON' : 'OFF'}</span>
-                                            <span className="opacity-50">[{JSON.stringify(formValues[f.id]) || '-'}]</span>
+                                        <div key={`${f.id}-${i}`} className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${isVisible ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'} ${!isCond ? 'border border-slate-700' : 'ring-1 ring-amber-500/30'}`}>
+                                            <span className="font-bold">{f.id.substring(0, 8)}:</span>
+                                            <span>{isVisible ? 'VIS' : 'HID'}</span>
+                                            <span className="opacity-70">[{JSON.stringify(val) || '-'}]</span>
+                                            {isCond && <span className="text-[7px] bg-slate-700 px-0.5 rounded text-amber-300">COND</span>}
                                         </div>
                                     );
                                 })}
