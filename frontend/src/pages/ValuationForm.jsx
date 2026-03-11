@@ -297,7 +297,8 @@ export default function ValuationForm() {
     }, [template]);
 
     const isFieldVisible = (field, currentValues) => {
-        const rules = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value !== undefined && c.value !== null && c.value !== '');
+        // Include rules even if they have an empty string (meaning "just check if parent has ANY value/is checked")
+        const rules = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : [])).filter(c => c.fieldId);
         if (rules.length === 0) return true;
 
         const fieldGroups = {};
@@ -327,6 +328,11 @@ export default function ValuationForm() {
                 : [String(val || '').trim().toLowerCase()];
 
             return currentValuesList.some(curr => {
+                // If they left the rule value blank, just check if the current input exists and is truthy / not empty
+                if (targetValues.includes('')) {
+                    if (isTruthy(curr) || (curr !== '' && curr !== 'false')) return true;
+                }
+
                 if (targetValues.includes(curr)) return true;
                 if (isTruthy(curr) && targetValues.some(isTruthy)) return true;
                 if (!isNaN(curr) && curr !== '' && targetValues.some(tv => !isNaN(tv) && tv !== '' && Number(tv) === Number(curr))) return true;
