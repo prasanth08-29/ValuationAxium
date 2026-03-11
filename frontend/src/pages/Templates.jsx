@@ -145,8 +145,8 @@ export default function Templates() {
             const next = [...prev];
             next[index] = { ...next[index], [key]: value };
 
-            // Default to Yes/No for radio buttons to save user effort
-            if (key === 'type' && value === 'radio' && (!next[index].options || next[index].options.length === 0)) {
+            // Default to Yes/No for dropdowns to save user effort
+            if (key === 'type' && value === 'select' && (!next[index].options || next[index].options.length === 0)) {
                 next[index].options = ['Yes', 'No'];
             }
 
@@ -496,7 +496,7 @@ export default function Templates() {
                                                         </button>
                                                     </div>
                                                 )}
-                                                {activeEditIndex === index && (field.type === 'select' || field.type === 'radio') && (
+                                                {activeEditIndex === index && field.type === 'select' && (
                                                     <div className="w-full space-y-3 mt-4 pl-8 sm:pl-11">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex flex-col">

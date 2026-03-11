@@ -665,7 +665,7 @@ export default function ValuationForm() {
                                                 }
                                                 return (
                                                     <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading' || field.type === 'subheading') ? 'md:col-span-2' : ''}>
-                                                        {field.type !== 'heading' && field.type !== 'subheading' && (
+                                                        {field.type !== 'heading' && field.type !== 'subheading' && field.type !== 'radio' && (
                                                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                                 {field.label} {field.required && <span className="text-red-500">*</span>}
                                                             </label>
@@ -710,20 +710,35 @@ export default function ValuationForm() {
                                                             </select>
                                                         ) : field.type === 'radio' ? (
                                                             <div className="flex flex-wrap gap-4 mt-1">
-                                                                {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => (
-                                                                    <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
+                                                                {(!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : !field.options.trim())) ? (
+                                                                    <label className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
                                                                         <div className="relative flex items-center justify-center shrink-0">
                                                                             <input
                                                                                 type="radio"
-                                                                                value={opt}
+                                                                                value={field.label}
                                                                                 {...register(field.id)}
                                                                                 className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
                                                                             />
                                                                             <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
                                                                         </div>
-                                                                        <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
+                                                                        <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{field.label}</span>
                                                                     </label>
-                                                                ))}
+                                                                ) : (
+                                                                    (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => (
+                                                                        <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
+                                                                            <div className="relative flex items-center justify-center shrink-0">
+                                                                                <input
+                                                                                    type="radio"
+                                                                                    value={opt}
+                                                                                    {...register(field.id)}
+                                                                                    className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
+                                                                                />
+                                                                                <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
+                                                                            </div>
+                                                                            <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
+                                                                        </label>
+                                                                    ))
+                                                                )}
                                                             </div>
                                                         ) : field.type === 'subheading' ? (
                                                             <div className="mt-6 mb-2 py-2 border-b border-gray-100">
