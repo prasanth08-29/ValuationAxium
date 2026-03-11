@@ -707,26 +707,37 @@ export default function ValuationForm() {
                     alert("Validation Failed. Please check the highlighted fields in the sections!");
                 })} className="space-y-4 relative">
 
-                    {/* Debug Panel */}
-                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-4 text-[10px] font-mono overflow-auto max-h-60 shadow-inner">
-                        <div className="flex justify-between items-center mb-2 border-b border-amber-200 pb-2">
-                             <h4 className="font-bold uppercase tracking-wider text-amber-800">Visibility Debugger</h4>
-                             <span className="text-amber-600 bg-amber-100 px-2 py-0.5 rounded">Real-time Watcher</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {template.sections.flatMap(s => s.fields || []).slice(0, 50).map(f => {
-                                const isVisible = isFieldVisible(f, formValues);
-                                if (!f.conditions && !f.dependsOn) return null;
-                                return (
-                                    <div key={f.id} className={`p-1 border rounded ${isVisible ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
-                                        <div className="font-bold truncate" title={f.label || f.id}>{f.label || f.id}</div>
-                                        <div className="flex justify-between items-center">
-                                            <span className={isVisible ? 'text-green-700 font-bold' : 'text-gray-500'}>{isVisible ? 'VISIBLE' : 'HIDDEN'}</span>
-                                            <span className="text-gray-400 italic truncate w-16">{JSON.stringify(formValues[f.id]) || 'n/a'}</span>
+                    {/* Fixed Debug Bar */}
+                    <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-slate-900 text-white shadow-2xl border-t border-slate-700 font-mono text-[9px] pointer-events-none">
+                        <div className="max-w-7xl mx-auto px-4 py-2 pointer-events-auto">
+                            <div className="flex justify-between items-center mb-1 border-b border-slate-700 pb-1">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-amber-400 font-bold">🛠 STICKY DEBUGGER</span>
+                                    <span className="text-slate-400">|</span>
+                                    <span className="text-blue-300">Section: {expandedStep + 1}</span>
+                                    <span className="text-slate-400">|</span>
+                                    <span className="text-purple-300">Values: {Object.keys(formValues).filter(k => formValues[k]).length} active</span>
+                                </div>
+                                <button 
+                                    type="button"
+                                    onClick={() => console.log('FULL FORM STATE:', { formValues, template, steps })}
+                                    className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-[8px] transition-colors"
+                                >
+                                    LOG STATE TO CONSOLE
+                                </button>
+                            </div>
+                            <div className="flex gap-4 overflow-x-auto pb-1 whitespace-nowrap scrollbar-hide">
+                                {template.sections.flatMap(s => s.fields || []).filter(f => f.conditions || f.dependsOn).slice(0, 30).map(f => {
+                                    const isVisible = isFieldVisible(f, formValues);
+                                    return (
+                                        <div key={f.id} className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${isVisible ? 'bg-green-500/20 text-green-400' : 'bg-slate-800 text-slate-500'}`}>
+                                            <span className="font-bold">{f.id.substring(0, 10)}:</span>
+                                            <span>{isVisible ? 'ON' : 'OFF'}</span>
+                                            <span className="opacity-50">[{JSON.stringify(formValues[f.id]) || '-'}]</span>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
 
