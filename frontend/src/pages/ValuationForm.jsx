@@ -657,8 +657,17 @@ export default function ValuationForm() {
 
                                                 if (conditions.length > 0) {
                                                     const allMet = conditions.every(cond => {
-                                                        const parentValue = formValues[cond.fieldId];
-                                                        return String(parentValue || '').toLowerCase() === String(cond.value || '').toLowerCase();
+                                                        const val = formValues[cond.fieldId];
+                                                        if (val === undefined || val === null || val === '') return false;
+                                                        
+                                                        const target = String(cond.value || '').toLowerCase();
+                                                        const current = String(val).toLowerCase();
+                                                        
+                                                        // Handle direct matches, booleans, and label matches
+                                                        return current === target || 
+                                                               (target === 'true' && val === true) || 
+                                                               (target === 'false' && val === false) ||
+                                                               (current === 'on' && target === 'true');
                                                     });
 
                                                     if (!allMet) return null;
@@ -714,16 +723,8 @@ export default function ValuationForm() {
                                                                     <label className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
                                                                         <div className="relative flex items-center justify-center shrink-0">
                                                                             <input
-                                                                                type="radio"
-                                                                                value={field.label}
-                                                                                checked={formValues[field.id] === field.label}
+                                                                                type="checkbox"
                                                                                 {...register(field.id)}
-                                                                                onClick={(e) => {
-                                                                                    // Use formValues from watch() which represents state BEFORE this click
-                                                                                    if (formValues[field.id] === field.label) {
-                                                                                        setValue(field.id, '', { shouldValidate: true });
-                                                                                    }
-                                                                                }}
                                                                                 className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
                                                                             />
                                                                             <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
@@ -731,26 +732,32 @@ export default function ValuationForm() {
                                                                         <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{field.label}</span>
                                                                     </label>
                                                                 ) : (
-                                                                    (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => (
-                                                                        <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
-                                                                            <div className="relative flex items-center justify-center shrink-0">
-                                                                                <input
-                                                                                    type="radio"
-                                                                                    value={opt}
-                                                                                    checked={formValues[field.id] === opt}
-                                                                                    {...register(field.id)}
-                                                                                    onClick={(e) => {
-                                                                                        if (formValues[field.id] === opt) {
-                                                                                            setValue(field.id, '', { shouldValidate: true });
-                                                                                        }
-                                                                                    }}
-                                                                                    className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
-                                                                                />
-                                                                                <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
-                                                                            </div>
-                                                                            <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
-                                                                        </label>
-                                                                    ))
+                                                                    (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
+                                                                        const isSelected = formValues[field.id] === opt;
+                                                                        return (
+                                                                            <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
+                                                                                <div className="relative flex items-center justify-center shrink-0">
+                                                                                    <input
+                                                                                        type="radio"
+                                                                                        name={field.id}
+                                                                                        value={opt}
+                                                                                        checked={isSelected}
+                                                                                        onClick={() => {
+                                                                                            if (isSelected) {
+                                                                                                setValue(field.id, '', { shouldValidate: true });
+                                                                                            } else {
+                                                                                                setValue(field.id, opt, { shouldValidate: true });
+                                                                                            }
+                                                                                        }}
+                                                                                        onChange={() => {}} // Handled by onClick for deselect logic
+                                                                                        className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
+                                                                                    />
+                                                                                    <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
+                                                                                </div>
+                                                                                <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
+                                                                            </label>
+                                                                        );
+                                                                    })
                                                                 )}
                                                             </div>
                                                         ) : field.type === 'subheading' ? (
