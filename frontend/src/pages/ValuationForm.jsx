@@ -718,8 +718,9 @@ export default function ValuationForm() {
                                                                                 value={field.label}
                                                                                 checked={formValues[field.id] === field.label}
                                                                                 {...register(field.id)}
-                                                                                onClick={() => {
-                                                                                    if (getValues(field.id) === field.label) {
+                                                                                onClick={(e) => {
+                                                                                    // Use formValues from watch() which represents state BEFORE this click
+                                                                                    if (formValues[field.id] === field.label) {
                                                                                         setValue(field.id, '', { shouldValidate: true });
                                                                                     }
                                                                                 }}
@@ -738,8 +739,8 @@ export default function ValuationForm() {
                                                                                     value={opt}
                                                                                     checked={formValues[field.id] === opt}
                                                                                     {...register(field.id)}
-                                                                                    onClick={() => {
-                                                                                        if (getValues(field.id) === opt) {
+                                                                                    onClick={(e) => {
+                                                                                        if (formValues[field.id] === opt) {
                                                                                             setValue(field.id, '', { shouldValidate: true });
                                                                                         }
                                                                                     }}
