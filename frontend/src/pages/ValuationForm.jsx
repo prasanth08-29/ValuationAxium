@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft, Camera, CheckCircle2, Download, AlertCircle, UploadCloud, Image as ImageIcon, X, MapPin } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAlert } from '../context/AlertContext';
@@ -365,7 +365,7 @@ export default function ValuationForm() {
         mode: 'onTouched'
     });
 
-    const formValues = watch();
+    const formValues = useWatch({ control }) || {};
 
     const steps = useMemo(() => {
         if (!template || !template.sections) return [];
