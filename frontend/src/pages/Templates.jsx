@@ -575,7 +575,7 @@ export default function Templates() {
                                                                     className="text-[10px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors outline-none cursor-pointer appearance-none pr-8"
                                                                 >
                                                                     <option value="">+ Make this field depend on...</option>
-                                                                    {fields.filter((f, i) => i !== index && !(field.conditions || []).find(c => c.fieldId === f.id)).map(f => (
+                                                                    {fields.filter((f, i) => i !== index).map(f => (
                                                                         <option key={f.id} value={f.id}>{f.label || f.id}</option>
                                                                     ))}
                                                                 </select>
