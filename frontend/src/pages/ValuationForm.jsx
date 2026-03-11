@@ -268,14 +268,21 @@ export default function ValuationForm() {
         template.sections.forEach(sec => {
             sec.fields?.forEach(field => {
                 if (field.type !== 'button' && field.type !== 'heading') {
-                    // Make explicitly required ones string with min(1)
                     if (field.isList || field.type === 'bullets') {
                         shape[field.id] = z.array(z.string()).optional();
                     } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
-                        shape[field.id] = z.string().min(1, `${field.label || field.id} is required`);
+                        // Preprocess boolean to string for checkboxes/radio buttons and ensure min(1)
+                        shape[field.id] = z.preprocess(val => {
+                            if (typeof val === 'boolean') return val ? 'true' : '';
+                            if (typeof val === 'number') return String(val);
+                            return val;
+                        }, z.string().min(1, `${field.label || field.id} is required`));
                     } else {
-                        // Allow optional values
-                        shape[field.id] = z.string().optional().or(z.literal(''));
+                        shape[field.id] = z.preprocess(val => {
+                            if (typeof val === 'boolean') return val ? 'true' : '';
+                            if (typeof val === 'number') return String(val);
+                            return val;
+                        }, z.string().optional().or(z.literal('')));
                     }
                 }
             });
@@ -283,8 +290,43 @@ export default function ValuationForm() {
         return z.object(shape);
     }, [template]);
 
+    const isFieldVisible = (field, currentValues) => {
+        const conditions = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
+        if (conditions.length === 0) return true;
+
+        return conditions.every(cond => {
+            const val = currentValues[cond.fieldId];
+            if (val === undefined || val === null || val === '') return false;
+
+            const target = String(cond.value || '').trim().toLowerCase();
+            const current = String(val).trim().toLowerCase();
+
+            return current === target ||
+                (target === 'true' && val === true) ||
+                (target === 'false' && val === false) ||
+                (current === 'on' && target === 'true');
+        });
+    };
+
     const { register, handleSubmit, getValues, reset, control, trigger, watch, setValue, formState: { errors } } = useForm({
-        resolver: zodResolver(schema),
+        resolver: async (data, context, options) => {
+            const result = await zodResolver(schema)(data, context, options);
+            if (result.errors && template?.sections) {
+                const filteredErrors = {};
+                let hasErrors = false;
+                
+                template.sections.forEach(sec => {
+                    sec.fields?.forEach(field => {
+                        if (result.errors[field.id] && isFieldVisible(field, data)) {
+                            filteredErrors[field.id] = result.errors[field.id];
+                            hasErrors = true;
+                        }
+                    });
+                });
+                return { ...result, errors: hasErrors ? filteredErrors : {} };
+            }
+            return result;
+        },
         mode: 'onTouched'
     });
 
@@ -331,11 +373,16 @@ export default function ValuationForm() {
 
     const [expandedStep, setExpandedStep] = useState(0);
 
+
     const handleNext = async () => {
         // Find fields in current section to validate
         if (steps[expandedStep].type === 'section') {
-            const currentFields = steps[expandedStep].content.fields.map(f => f.id);
-            const isValid = await trigger(currentFields);
+            const currentValues = getValues();
+            const visibleFields = steps[expandedStep].content.fields
+                .filter(f => isFieldVisible(f, currentValues))
+                .map(f => f.id);
+            
+            const isValid = await trigger(visibleFields);
             if (!isValid) return;
         }
         setExpandedStep(prev => Math.min(prev + 1, steps.length - 1));
@@ -652,26 +699,8 @@ export default function ValuationForm() {
                                     {step.type === 'section' ? (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {step.content.fields.map(field => {
-                                                // Conditional visibility check
-                                                const conditions = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
-
-                                                if (conditions.length > 0) {
-                                                    const allMet = conditions.every(cond => {
-                                                        const val = formValues[cond.fieldId];
-                                                        if (val === undefined || val === null || val === '') return false;
-                                                        
-                                                        const target = String(cond.value || '').toLowerCase();
-                                                        const current = String(val).toLowerCase();
-                                                        
-                                                        // Handle direct matches, booleans, and label matches
-                                                        return current === target || 
-                                                               (target === 'true' && val === true) || 
-                                                               (target === 'false' && val === false) ||
-                                                               (current === 'on' && target === 'true');
-                                                    });
-
-                                                    if (!allMet) return null;
-                                                }
+                                                if (!isFieldVisible(field, formValues)) return null;
+                                                
                                                 return (
                                                     <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading' || field.type === 'subheading') ? 'md:col-span-2' : ''}>
                                                         {field.type !== 'heading' && field.type !== 'subheading' && field.type !== 'radio' && (
@@ -739,17 +768,19 @@ export default function ValuationForm() {
                                                                                 <div className="relative flex items-center justify-center shrink-0">
                                                                                     <input
                                                                                         type="radio"
-                                                                                        name={field.id}
                                                                                         value={opt}
                                                                                         checked={isSelected}
-                                                                                        onClick={() => {
+                                                                                        {...register(field.id)}
+                                                                                        onClick={(e) => {
                                                                                             if (isSelected) {
-                                                                                                setValue(field.id, '', { shouldValidate: true });
+                                                                                                // Deselect logic
+                                                                                                e.preventDefault();
+                                                                                                setValue(field.id, '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                                                                                             } else {
-                                                                                                setValue(field.id, opt, { shouldValidate: true });
+                                                                                                setValue(field.id, opt, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                                                                                             }
                                                                                         }}
-                                                                                        onChange={() => {}} // Handled by onClick for deselect logic
+                                                                                        onChange={() => {}} // Hook Form handles this via register, but we need to stay controlled
                                                                                         className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
                                                                                     />
                                                                                     <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
