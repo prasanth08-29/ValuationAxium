@@ -268,10 +268,12 @@ export default function ValuationForm() {
         template.sections.forEach(sec => {
             sec.fields?.forEach(field => {
                 if (field.type !== 'button' && field.type !== 'heading') {
+                    // Check if this is a radio button with no options (renders as a singular checkbox/trigger)
+                    const isCheckboxFallback = field.type === 'radio' && (!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : (typeof field.options === 'string' && !field.options.trim())));
+
                     if (field.isList || field.type === 'bullets') {
                         shape[field.id] = z.array(z.string()).optional();
-                    } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
-                        // Preprocess to string and handle null/undefined to avoid generic 'Invalid input'
+                    } else if (!isCheckboxFallback && (field.required || ['owner_name', 'property_address', 'date'].includes(field.id))) {
                         shape[field.id] = z.preprocess(val => {
                             if (val === undefined || val === null) return '';
                             if (typeof val === 'boolean') return val ? 'true' : '';
@@ -280,7 +282,7 @@ export default function ValuationForm() {
                         }, z.string().min(1, `${field.label || field.id} is required`));
                     } else {
                         shape[field.id] = z.preprocess(val => {
-                            if (val === undefined || val === null) return '';
+                            if (val === undefined || val === null || val === false) return '';
                             if (typeof val === 'boolean') return val ? 'true' : '';
                             if (typeof val === 'number') return String(val);
                             return String(val);
@@ -296,31 +298,47 @@ export default function ValuationForm() {
         const rules = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
         if (rules.length === 0) return true;
 
-        // Group rules by fieldId to handle OR logic for multiple rules on the same field
-        // e.g. Show if selection is "1" OR selection is "2"
         const fieldGroups = {};
         rules.forEach(r => {
             if (!fieldGroups[r.fieldId]) fieldGroups[r.fieldId] = [];
             fieldGroups[r.fieldId].push(String(r.value || '').trim().toLowerCase());
         });
 
-        // For EACH dependency group, at least one value must match (AND between fields, OR between values)
-        return Object.keys(fieldGroups).every(fieldId => {
+        const isTruthy = (v) => {
+            if (v === true) return true;
+            if (typeof v === 'string') {
+                const s = v.trim().toLowerCase();
+                return ['true', '1', 'yes', 'on', 'checked'].includes(s);
+            }
+            if (typeof v === 'number') return v === 1;
+            return false;
+        };
+
+        const allMet = Object.keys(fieldGroups).every(fieldId => {
             const val = currentValues[fieldId];
-            if (val === undefined || val === null || val === '') return false;
+            if (val === undefined || val === null || val === '' || val === false) return false;
 
             const targetValues = fieldGroups[fieldId];
-            
-            // Support both single values and multiple selection (arrays)
             const currentValuesList = Array.isArray(val) 
                 ? val.map(v => String(v).trim().toLowerCase()) 
                 : [String(val).trim().toLowerCase()];
 
-            return currentValuesList.some(curr => targetValues.includes(curr)) ||
-                   (targetValues.includes('true') && val === true) ||
-                   (targetValues.includes('false') && val === false) ||
-                   (currentValuesList.includes('on') && targetValues.includes('true'));
+            return currentValuesList.some(curr => 
+                targetValues.includes(curr) || 
+                (isTruthy(curr) && targetValues.some(isTruthy))
+            );
         });
+
+        // Debug logging for conditional visibility
+        if (rules.length > 0) {
+            console.log(`Visibility Check for "${field.label || field.id}":`, {
+                rules,
+                currentValues: Object.keys(fieldGroups).map(id => ({ id, value: currentValues[id] })),
+                isVisible: allMet
+            });
+        }
+
+        return allMet;
     };
 
     const { register, handleSubmit, getValues, reset, control, trigger, watch, setValue, formState: { errors } } = useForm({
@@ -769,11 +787,11 @@ export default function ValuationForm() {
                                                                             <input
                                                                                 type="checkbox"
                                                                                 {...register(field.id)}
-                                                                                className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
+                                                                                className={`peer appearance-none w-5 h-5 border-2 ${errors[field.id] ? 'border-red-300' : 'border-gray-200'} rounded-full checked:border-primary-600 transition-all cursor-pointer`}
                                                                             />
                                                                             <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
                                                                         </div>
-                                                                        <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{field.label}</span>
+                                                                        <span className={`text-sm font-medium ${errors[field.id] ? 'text-red-600' : 'text-gray-700'} group-hover:text-primary-800 transition-colors whitespace-nowrap`}>{field.label}</span>
                                                                     </label>
                                                                 ) : (
                                                                     (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
