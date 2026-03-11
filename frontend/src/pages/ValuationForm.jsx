@@ -422,7 +422,7 @@ export default function ValuationForm() {
                                 title: 'Template Variables',
                                 fields: found.fields.map(f => ({
                                     ...f,
-                                    type: f.type || 'text',
+                                    type: (f.type || 'text').toLowerCase(),
                                     isList: f.isList || false,
                                     placeholder: f.placeholder || '',
                                     options: Array.isArray(f.options) ? f.options : (typeof f.options === 'string' ? f.options.split(',').map(s => s.trim()) : [])
@@ -677,7 +677,7 @@ export default function ValuationForm() {
                                                             </h3>
                                                         )}
 
-                                                        {field.isList ? (
+                                                        {field.isList && (field.type === 'text' || field.type === 'textarea' || !field.type) ? (
                                                             <div className="w-full">
                                                                 <Controller
                                                                     name={field.id}

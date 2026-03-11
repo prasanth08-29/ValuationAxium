@@ -402,7 +402,7 @@ export default function Templates() {
                                                                     <div className="relative">
                                                                         <select
                                                                             value={field.type || 'text'}
-                                                                            onChange={(e) => handleUpdateField(index, 'type', e.target.value)}
+                                                                            onChange={(e) => handleUpdateField(index, 'type', e.target.value.toLowerCase())}
                                                                             className="w-full bg-white border border-gray-200 text-gray-800 text-sm font-medium rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-3 outline-none transition-all cursor-pointer appearance-none"
                                                                         >
                                                                             <option value="text">Text / Short</option>
@@ -419,6 +419,28 @@ export default function Templates() {
                                                                             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                                                         </div>
                                                                     </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="pl-11 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                <div className="relative">
+                                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field ID (Unique Key)</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={field.id}
+                                                                        onChange={(e) => handleUpdateField(index, 'id', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-600 text-[11px] font-mono rounded-lg p-2 outline-none focus:border-primary-400 transition-all"
+                                                                    />
+                                                                </div>
+                                                                <div className="relative">
+                                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Placeholder / Hint</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={field.placeholder || ''}
+                                                                        onChange={(e) => handleUpdateField(index, 'placeholder', e.target.value)}
+                                                                        className="w-full bg-white border border-gray-200 text-gray-800 text-[11px] font-medium rounded-lg p-2 outline-none focus:border-primary-400 transition-all"
+                                                                        placeholder="e.g. Select an option..."
+                                                                    />
                                                                 </div>
                                                             </div>
 
