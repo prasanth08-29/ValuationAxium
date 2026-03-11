@@ -295,7 +295,7 @@ export default function ValuationForm() {
     }, [template]);
 
     const isFieldVisible = (field, currentValues) => {
-        const rules = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
+        const rules = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value !== undefined && c.value !== null && c.value !== '');
         if (rules.length === 0) return true;
 
         const fieldGroups = {};
@@ -305,7 +305,7 @@ export default function ValuationForm() {
         });
 
         const isTruthy = (v) => {
-            if (v === true) return true;
+            if (v === true || v === 'true' || v === '1' || v === 'yes' || v === 'on' || v === 'checked') return true;
             if (typeof v === 'string') {
                 const s = v.trim().toLowerCase();
                 return ['true', '1', 'yes', 'on', 'checked'].includes(s);
@@ -315,25 +315,27 @@ export default function ValuationForm() {
         };
 
         const allMet = Object.keys(fieldGroups).every(fieldId => {
-            const val = currentValues[fieldId];
-            if (val === undefined || val === null || val === '' || val === false) return false;
+            let val = currentValues[fieldId];
+            if (val === undefined || val === null || val === false || val === '') return false;
 
             const targetValues = fieldGroups[fieldId];
+            
             const currentValuesList = Array.isArray(val) 
-                ? val.map(v => String(v).trim().toLowerCase()) 
-                : [String(val).trim().toLowerCase()];
+                ? val.map(v => String(v || '').trim().toLowerCase()) 
+                : [String(val || '').trim().toLowerCase()];
 
-            return currentValuesList.some(curr => 
-                targetValues.includes(curr) || 
-                (isTruthy(curr) && targetValues.some(isTruthy))
-            );
+            return currentValuesList.some(curr => {
+                if (targetValues.includes(curr)) return true;
+                if (isTruthy(curr) && targetValues.some(isTruthy)) return true;
+                if (!isNaN(curr) && curr !== '' && targetValues.some(tv => !isNaN(tv) && tv !== '' && Number(tv) === Number(curr))) return true;
+                return false;
+            });
         });
 
-        // Debug logging for conditional visibility
         if (rules.length > 0) {
             console.log(`Visibility Check for "${field.label || field.id}":`, {
                 rules,
-                currentValues: Object.keys(fieldGroups).map(id => ({ id, value: currentValues[id] })),
+                currentValuesForDebug: Object.keys(fieldGroups).reduce((acc, id) => ({ ...acc, [id]: currentValues[id] }), {}),
                 isVisible: allMet
             });
         }
