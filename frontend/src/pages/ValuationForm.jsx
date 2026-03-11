@@ -709,24 +709,21 @@ export default function ValuationForm() {
                                                                 ))}
                                                             </select>
                                                         ) : field.type === 'radio' ? (
-                                                            <div className="flex flex-wrap gap-x-4 gap-y-3 mt-2 p-3 bg-gray-50/50 rounded-xl border border-gray-200/50 min-h-[52px]">
+                                                            <div className="flex flex-wrap gap-4 mt-1">
                                                                 {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => (
-                                                                    <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-3 bg-white rounded-lg border border-transparent hover:border-primary-200 hover:shadow-sm transition-all">
-                                                                        <input
-                                                                            type="radio"
-                                                                            value={opt}
-                                                                            {...register(field.id)}
-                                                                            className="w-5 h-5 accent-primary-600 cursor-pointer transition-all shrink-0"
-                                                                        />
-                                                                        <span className="text-sm font-semibold text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
+                                                                    <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
+                                                                        <div className="relative flex items-center justify-center shrink-0">
+                                                                            <input
+                                                                                type="radio"
+                                                                                value={opt}
+                                                                                {...register(field.id)}
+                                                                                className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
+                                                                            />
+                                                                            <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
+                                                                        </div>
+                                                                        <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
                                                                     </label>
                                                                 ))}
-                                                                {(!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : !field.options.trim())) && (
-                                                                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
-                                                                        <AlertCircle className="w-4 h-4" />
-                                                                        <span className="text-xs font-medium">Please add options in Template Manager</span>
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         ) : field.type === 'subheading' ? (
                                                             <div className="mt-6 mb-2 py-2 border-b border-gray-100">

@@ -145,6 +145,11 @@ export default function Templates() {
             const next = [...prev];
             next[index] = { ...next[index], [key]: value };
 
+            // Default to Yes/No for radio buttons to save user effort
+            if (key === 'type' && value === 'radio' && (!next[index].options || next[index].options.length === 0)) {
+                next[index].options = ['Yes', 'No'];
+            }
+
             // Auto-update ID if label changes and it's basically the default or similar
             if (key === 'label' && next[index].id.startsWith('custom_field_')) {
                 next[index].id = value.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60) || next[index].id;
@@ -494,22 +499,28 @@ export default function Templates() {
                                                 {activeEditIndex === index && (field.type === 'select' || field.type === 'radio') && (
                                                     <div className="w-full space-y-3 mt-4 pl-8 sm:pl-11">
                                                         <div className="flex items-center justify-between">
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Options List</label>
+                                                            <div className="flex flex-col">
+                                                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Choices</h4>
+                                                                <p className="text-[9px] text-gray-400 pl-1 italic">Button names shown to user</p>
+                                                            </div>
                                                             <button
                                                                 onClick={() => {
                                                                     const currentOptions = Array.isArray(field.options) ? field.options : [];
-                                                                    handleUpdateField(index, 'options', [...currentOptions, `Option ${currentOptions.length + 1}`]);
+                                                                    handleUpdateField(index, 'options', [...currentOptions, '']);
                                                                 }}
                                                                 className="text-[10px] font-bold text-primary-600 hover:text-primary-700 bg-primary-50 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
                                                             >
-                                                                <Plus className="w-3 h-3" /> Add Option
+                                                                <Plus className="w-3 h-3" /> Add Choice
                                                             </button>
                                                         </div>
 
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                             {(Array.isArray(field.options) ? field.options : []).map((opt, optIdx) => (
                                                                 <div key={optIdx} className="group/opt flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100 hover:border-primary-100 transition-all">
-                                                                    <input
+                                                                     {field.type === 'radio' && (
+                                                                         <div className="w-4 h-4 rounded-full border-2 border-gray-300 ml-2 shrink-0"></div>
+                                                                     )}
+                                                                     <input
                                                                         type="text"
                                                                         value={opt}
                                                                         onChange={(e) => {
@@ -524,7 +535,7 @@ export default function Templates() {
                                                                             }
                                                                         }}
                                                                         className="flex-1 bg-white border-none text-gray-800 text-xs font-semibold rounded-lg p-2 focus:ring-2 focus:ring-primary-500/20 outline-none"
-                                                                        placeholder={`Option ${optIdx + 1}`}
+                                                                        placeholder="e.g., Good"
                                                                     />
                                                                     <button
                                                                         onClick={() => {
@@ -539,7 +550,7 @@ export default function Templates() {
                                                             ))}
                                                             {(Array.isArray(field.options) ? field.options : []).length === 0 && (
                                                                 <p className="text-[10px] text-gray-400 italic col-span-2 py-2 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                                                    No options added. Click "Add Option" to start.
+                                                                    No choices added. Click "Add Choice" to start.
                                                                 </p>
                                                             )}
                                                         </div>
