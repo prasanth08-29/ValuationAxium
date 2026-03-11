@@ -574,7 +574,7 @@ export default function Templates() {
                                                                     }}
                                                                     className="text-[10px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors outline-none cursor-pointer appearance-none pr-8"
                                                                 >
-                                                                    <option value="">+ Add Visibility Rule for...</option>
+                                                                    <option value="">+ Make this field depend on...</option>
                                                                     {fields.filter((f, i) => i !== index && !(field.conditions || []).find(c => c.fieldId === f.id)).map(f => (
                                                                         <option key={f.id} value={f.id}>{f.label || f.id}</option>
                                                                     ))}
@@ -598,7 +598,7 @@ export default function Templates() {
                                                                     <div key={condIdx} className="flex gap-2 items-end group/cond">
                                                                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 group-hover/cond:border-primary-200 transition-colors">
                                                                             <div className="relative">
-                                                                                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Depends on Field</label>
+                                                                                <label className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Show this field if:</label>
                                                                                 <div className="relative">
                                                                                     <select
                                                                                         value={cond.fieldId}
