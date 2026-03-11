@@ -716,11 +716,11 @@ export default function ValuationForm() {
                                                                             <input
                                                                                 type="radio"
                                                                                 value={field.label}
+                                                                                checked={formValues[field.id] === field.label}
                                                                                 {...register(field.id)}
-                                                                                onClick={(e) => {
-                                                                                    if (formValues[field.id] === field.label) {
-                                                                                        setValue(field.id, '');
-                                                                                        e.preventDefault();
+                                                                                onClick={() => {
+                                                                                    if (getValues(field.id) === field.label) {
+                                                                                        setValue(field.id, '', { shouldValidate: true });
                                                                                     }
                                                                                 }}
                                                                                 className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
@@ -736,11 +736,11 @@ export default function ValuationForm() {
                                                                                 <input
                                                                                     type="radio"
                                                                                     value={opt}
+                                                                                    checked={formValues[field.id] === opt}
                                                                                     {...register(field.id)}
-                                                                                    onClick={(e) => {
-                                                                                        if (formValues[field.id] === opt) {
-                                                                                            setValue(field.id, '');
-                                                                                            e.preventDefault();
+                                                                                    onClick={() => {
+                                                                                        if (getValues(field.id) === opt) {
+                                                                                            setValue(field.id, '', { shouldValidate: true });
                                                                                         }
                                                                                     }}
                                                                                     className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
