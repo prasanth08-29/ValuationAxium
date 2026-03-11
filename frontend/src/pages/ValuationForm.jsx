@@ -786,117 +786,113 @@ export default function ValuationForm() {
                             {expandedStep === idx && (
                                 <div className="p-4 md:p-8 border-t border-gray-100 animate-in fade-in slide-in-from-top-4 duration-300">
                                     {step.type === 'section' ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="flex flex-col space-y-0 text-sm">
                                             {step.content.fields.map(field => {
                                                 if (!isFieldVisible(field, formValues)) return null;
                                                 
+                                                // Check if it's a fallback checkbox
+                                                const isCheckboxFallback = field.type === 'radio' && (!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : !field.options.trim()));
+                                                const hideLeftLabel = isCheckboxFallback || field.type === 'heading' || field.type === 'subheading';
+
                                                 return (
-                                                    <div key={field.id} className={(field.type === 'textarea' || field.type === 'heading' || field.type === 'subheading') ? 'md:col-span-2' : ''}>
-                                                        {field.type !== 'heading' && field.type !== 'subheading' && field.type !== 'radio' && (
-                                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                                {field.label} {field.required && <span className="text-red-500">*</span>}
-                                                            </label>
+                                                    <div 
+                                                        key={field.id} 
+                                                        className={`flex flex-col md:flex-row md:items-start md:py-3 ${field.type === 'subheading' ? 'mt-8 mb-2' : 'border-b border-gray-100 last:border-0'}`}
+                                                    >
+                                                        {!hideLeftLabel && (
+                                                            <div className="w-full md:w-[35%] shrink-0 pt-2 pb-1 md:py-0 pr-4">
+                                                                <label className="block text-[13px] font-medium text-gray-700">
+                                                                    {field.label} {field.required && <span className="text-red-500">*</span>}
+                                                                </label>
+                                                            </div>
                                                         )}
-
+                                                        
                                                         {field.type === 'subheading' && (
-                                                            <h3 className="text-base font-bold text-primary-700 mt-4 mb-2 pb-1 border-b border-primary-100 uppercase tracking-tight">
-                                                                {field.label}
-                                                            </h3>
+                                                            <div className="w-full">
+                                                                <h3 className="text-lg font-light text-cyan-600">
+                                                                    {field.label}
+                                                                </h3>
+                                                            </div>
                                                         )}
 
-                                                        {field.isList && (field.type === 'text' || field.type === 'textarea' || !field.type) ? (
-                                                            <div className="w-full">
+                                                        <div className={`w-full ${hideLeftLabel && field.type !== 'subheading' ? 'md:ml-[35%]' : 'md:w-[65%]'}`}>
+                                                            {field.isList && (field.type === 'text' || field.type === 'textarea' || !field.type) ? (
                                                                 <Controller
                                                                     name={field.id}
                                                                     control={control}
                                                                     defaultValue={[]}
                                                                     render={({ field: { onChange, value } }) => (
-                                                                        <BulletInput
-                                                                            value={value}
-                                                                            onChange={onChange}
-                                                                            label={field.label}
-                                                                        />
+                                                                        <BulletInput value={value} onChange={onChange} label={field.label} />
                                                                     )}
                                                                 />
-                                                            </div>
-                                                        ) : field.type === 'textarea' ? (
-                                                            <textarea
-                                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 resize-none h-32 bg-white`}
-                                                                {...register(field.id)}
-                                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
-                                                            />
-                                                        ) : field.type === 'select' ? (
-                                                            <select
-                                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
-                                                                {...register(field.id)}
-                                                            >
-                                                                <option value="">Select {field.label}</option>
-                                                                {field.options?.map(opt => (
-                                                                    <option key={opt} value={opt}>{opt}</option>
-                                                                ))}
-                                                            </select>
-                                                        ) : field.type === 'radio' ? (
-                                                            <div className="flex flex-wrap gap-4 mt-1">
-                                                                {(!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : !field.options.trim())) ? (
-                                                                    <label className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
-                                                                        <div className="relative flex items-center justify-center shrink-0">
+                                                            ) : field.type === 'textarea' ? (
+                                                                <textarea
+                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 resize-none h-24 bg-white shadow-sm`}
+                                                                    {...register(field.id)}
+                                                                    placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                                                />
+                                                            ) : field.type === 'select' ? (
+                                                                <select
+                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 bg-white shadow-sm`}
+                                                                    {...register(field.id)}
+                                                                >
+                                                                    <option value="">Select {field.label}</option>
+                                                                    {field.options?.map(opt => (
+                                                                        <option key={opt} value={opt}>{opt}</option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : field.type === 'radio' ? (
+                                                                <div className="flex flex-wrap gap-4 mt-1">
+                                                                    {isCheckboxFallback ? (
+                                                                        <label className="flex items-center gap-3 cursor-pointer group py-1 transition-all">
                                                                             <input
                                                                                 type="checkbox"
                                                                                 {...register(field.id)}
-                                                                                className={`peer appearance-none w-5 h-5 border-2 ${errors[field.id] ? 'border-red-300' : 'border-gray-200'} rounded-full checked:border-primary-600 transition-all cursor-pointer`}
+                                                                                className={`w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 border-gray-300 transition-all cursor-pointer`}
                                                                             />
-                                                                            <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
-                                                                        </div>
-                                                                        <span className={`text-sm font-medium ${errors[field.id] ? 'text-red-600' : 'text-gray-700'} group-hover:text-primary-800 transition-colors whitespace-nowrap`}>{field.label}</span>
-                                                                    </label>
-                                                                ) : (
-                                                                    (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
-                                                                        const isSelected = formValues[field.id] === opt;
-                                                                        return (
-                                                                            <label key={opt} className="flex items-center gap-2.5 cursor-pointer group py-1 pr-2 transition-all">
-                                                                                <div className="relative flex items-center justify-center shrink-0">
-                                                                                    <input
-                                                                                        type="radio"
-                                                                                        value={opt}
-                                                                                        checked={isSelected}
-                                                                                        {...register(field.id)}
-                                                                                        onClick={(e) => {
-                                                                                            // Hook Form's internal onClick might interfere, but we need our custom deselect
-                                                                                            if (isSelected) {
-                                                                                                e.preventDefault();
-                                                                                                setValue(field.id, '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-                                                                                            }
-                                                                                        }}
-                                                                                        className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
-                                                                                    />
-                                                                                    <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
-                                                                                </div>
-                                                                                <span className="text-sm font-medium text-gray-700 group-hover:text-primary-800 transition-colors whitespace-nowrap">{opt}</span>
-                                                                            </label>
-                                                                        );
-                                                                    })
-                                                                )}
-                                                            </div>
-                                                        ) : field.type === 'subheading' ? (
-                                                            <div className="mt-6 mb-2 py-2 border-b border-gray-100">
-                                                                <h4 className="text-sm font-bold text-gray-900 border-l-4 border-primary-500 pl-3 uppercase tracking-tight">
-                                                                    {field.label}
-                                                                </h4>
-                                                            </div>
-                                                        ) : field.type === 'heading' ? null : (
-                                                            <input
-                                                                type={field.type}
-                                                                className={`w-full px-4 py-3 rounded-xl border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-200 focus:border-primary-500 focus:ring-primary-50'} focus:ring-4 transition-all text-gray-900 bg-white`}
-                                                                {...register(field.id)}
-                                                                placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
-                                                            />
-                                                        )}
-                                                        {errors[field.id] && (
-                                                            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                                                                <AlertCircle className="w-4 h-4" />
-                                                                {errors[field.id]?.message}
-                                                            </p>
-                                                        )}
+                                                                            <span className={`text-[13px] font-medium ${errors[field.id] ? 'text-red-600' : 'text-gray-800'} whitespace-nowrap`}>{field.label}</span>
+                                                                        </label>
+                                                                    ) : (
+                                                                        (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
+                                                                            const isSelected = formValues[field.id] === opt;
+                                                                            return (
+                                                                                <label key={opt} className="flex items-center gap-2 cursor-pointer group py-1 transition-all">
+                                                                                    <div className="relative flex items-center justify-center shrink-0">
+                                                                                        <input
+                                                                                            type="radio"
+                                                                                            value={opt}
+                                                                                            checked={isSelected}
+                                                                                            {...register(field.id)}
+                                                                                            onClick={(e) => {
+                                                                                                if (isSelected) {
+                                                                                                    e.preventDefault();
+                                                                                                    setValue(field.id, '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                                                                                                }
+                                                                                            }}
+                                                                                            className="w-4 h-4 text-cyan-600 border-gray-300 focus:ring-cyan-500 cursor-pointer"
+                                                                                        />
+                                                                                    </div>
+                                                                                    <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{opt}</span>
+                                                                                </label>
+                                                                            );
+                                                                        })
+                                                                    )}
+                                                                </div>
+                                                            ) : field.type === 'heading' ? null : (
+                                                                <input
+                                                                    type={field.type}
+                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 bg-white shadow-sm`}
+                                                                    {...register(field.id)}
+                                                                    placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
+                                                                />
+                                                            )}
+                                                            {errors[field.id] && (
+                                                                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                                                                    <AlertCircle className="w-3 h-3" />
+                                                                    {errors[field.id]?.message}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 );
                                             })}
