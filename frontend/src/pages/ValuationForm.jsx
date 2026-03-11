@@ -283,7 +283,7 @@ export default function ValuationForm() {
         return z.object(shape);
     }, [template]);
 
-    const { register, handleSubmit, getValues, reset, control, trigger, watch, formState: { errors } } = useForm({
+    const { register, handleSubmit, getValues, reset, control, trigger, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         mode: 'onTouched'
     });
@@ -717,6 +717,12 @@ export default function ValuationForm() {
                                                                                 type="radio"
                                                                                 value={field.label}
                                                                                 {...register(field.id)}
+                                                                                onClick={(e) => {
+                                                                                    if (formValues[field.id] === field.label) {
+                                                                                        setValue(field.id, '');
+                                                                                        e.preventDefault();
+                                                                                    }
+                                                                                }}
                                                                                 className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
                                                                             />
                                                                             <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
@@ -731,6 +737,12 @@ export default function ValuationForm() {
                                                                                     type="radio"
                                                                                     value={opt}
                                                                                     {...register(field.id)}
+                                                                                    onClick={(e) => {
+                                                                                        if (formValues[field.id] === opt) {
+                                                                                            setValue(field.id, '');
+                                                                                            e.preventDefault();
+                                                                                        }
+                                                                                    }}
                                                                                     className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
                                                                                 />
                                                                                 <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
