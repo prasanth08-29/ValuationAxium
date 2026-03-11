@@ -707,6 +707,29 @@ export default function ValuationForm() {
                     alert("Validation Failed. Please check the highlighted fields in the sections!");
                 })} className="space-y-4 relative">
 
+                    {/* Debug Panel */}
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-4 text-[10px] font-mono overflow-auto max-h-60 shadow-inner">
+                        <div className="flex justify-between items-center mb-2 border-b border-amber-200 pb-2">
+                             <h4 className="font-bold uppercase tracking-wider text-amber-800">Visibility Debugger</h4>
+                             <span className="text-amber-600 bg-amber-100 px-2 py-0.5 rounded">Real-time Watcher</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {template.sections.flatMap(s => s.fields || []).slice(0, 50).map(f => {
+                                const isVisible = isFieldVisible(f, formValues);
+                                if (!f.conditions && !f.dependsOn) return null;
+                                return (
+                                    <div key={f.id} className={`p-1 border rounded ${isVisible ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+                                        <div className="font-bold truncate" title={f.label || f.id}>{f.label || f.id}</div>
+                                        <div className="flex justify-between items-center">
+                                            <span className={isVisible ? 'text-green-700 font-bold' : 'text-gray-500'}>{isVisible ? 'VISIBLE' : 'HIDDEN'}</span>
+                                            <span className="text-gray-400 italic truncate w-16">{JSON.stringify(formValues[f.id]) || 'n/a'}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     {steps.map((step, idx) => (
                         <div key={idx} id={`step-${idx}`} className={`border overflow-hidden rounded-2xl transition-all duration-300 ${expandedStep === idx ? 'border-primary-100 bg-white shadow-xl ring-1 ring-primary-50' : 'border-gray-100 bg-white/60 hover:bg-white'}`}>
                             {/* Accordion Header */}
