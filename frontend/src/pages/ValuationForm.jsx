@@ -271,17 +271,19 @@ export default function ValuationForm() {
                     if (field.isList || field.type === 'bullets') {
                         shape[field.id] = z.array(z.string()).optional();
                     } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
-                        // Preprocess boolean to string for checkboxes/radio buttons and ensure min(1)
+                        // Preprocess to string and handle null/undefined to avoid generic 'Invalid input'
                         shape[field.id] = z.preprocess(val => {
+                            if (val === undefined || val === null) return '';
                             if (typeof val === 'boolean') return val ? 'true' : '';
                             if (typeof val === 'number') return String(val);
-                            return val;
+                            return String(val);
                         }, z.string().min(1, `${field.label || field.id} is required`));
                     } else {
                         shape[field.id] = z.preprocess(val => {
+                            if (val === undefined || val === null) return '';
                             if (typeof val === 'boolean') return val ? 'true' : '';
                             if (typeof val === 'number') return String(val);
-                            return val;
+                            return String(val);
                         }, z.string().optional().or(z.literal('')));
                     }
                 }
@@ -291,20 +293,33 @@ export default function ValuationForm() {
     }, [template]);
 
     const isFieldVisible = (field, currentValues) => {
-        const conditions = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
-        if (conditions.length === 0) return true;
+        const rules = (field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : [])).filter(c => c.fieldId && c.value);
+        if (rules.length === 0) return true;
 
-        return conditions.every(cond => {
-            const val = currentValues[cond.fieldId];
+        // Group rules by fieldId to handle OR logic for multiple rules on the same field
+        // e.g. Show if selection is "1" OR selection is "2"
+        const fieldGroups = {};
+        rules.forEach(r => {
+            if (!fieldGroups[r.fieldId]) fieldGroups[r.fieldId] = [];
+            fieldGroups[r.fieldId].push(String(r.value || '').trim().toLowerCase());
+        });
+
+        // For EACH dependency group, at least one value must match (AND between fields, OR between values)
+        return Object.keys(fieldGroups).every(fieldId => {
+            const val = currentValues[fieldId];
             if (val === undefined || val === null || val === '') return false;
 
-            const target = String(cond.value || '').trim().toLowerCase();
-            const current = String(val).trim().toLowerCase();
+            const targetValues = fieldGroups[fieldId];
+            
+            // Support both single values and multiple selection (arrays)
+            const currentValuesList = Array.isArray(val) 
+                ? val.map(v => String(v).trim().toLowerCase()) 
+                : [String(val).trim().toLowerCase()];
 
-            return current === target ||
-                (target === 'true' && val === true) ||
-                (target === 'false' && val === false) ||
-                (current === 'on' && target === 'true');
+            return currentValuesList.some(curr => targetValues.includes(curr)) ||
+                   (targetValues.includes('true') && val === true) ||
+                   (targetValues.includes('false') && val === false) ||
+                   (currentValuesList.includes('on') && targetValues.includes('true'));
         });
     };
 
@@ -772,15 +787,12 @@ export default function ValuationForm() {
                                                                                         checked={isSelected}
                                                                                         {...register(field.id)}
                                                                                         onClick={(e) => {
+                                                                                            // Hook Form's internal onClick might interfere, but we need our custom deselect
                                                                                             if (isSelected) {
-                                                                                                // Deselect logic
                                                                                                 e.preventDefault();
                                                                                                 setValue(field.id, '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-                                                                                            } else {
-                                                                                                setValue(field.id, opt, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                                                                                             }
                                                                                         }}
-                                                                                        onChange={() => {}} // Hook Form handles this via register, but we need to stay controlled
                                                                                         className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-full checked:border-primary-600 transition-all cursor-pointer"
                                                                                     />
                                                                                     <div className="absolute w-2.5 h-2.5 bg-primary-600 rounded-full scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
