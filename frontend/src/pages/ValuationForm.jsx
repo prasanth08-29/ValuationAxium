@@ -803,10 +803,10 @@ export default function ValuationForm() {
                                                 return (
                                                     <div 
                                                         key={field.id} 
-                                                        className={`flex flex-col md:flex-row md:items-start md:py-3 ${field.type === 'subheading' ? 'mt-8 mb-2' : 'border-b border-gray-100 last:border-0'}`}
+                                                        className={`flex flex-col md:flex-row md:items-start md:py-3 ${field.type === 'subheading' ? 'mt-8 mb-2' : 'border-b border-gray-100 last:border-0'} ${(field.conditions?.length > 0 || field.dependsOn) ? 'bg-primary-50/20 border-l-4 border-primary-200 pl-4 my-1 rounded-r-xl transition-all' : ''}`}
                                                     >
                                                         {!hideLeftLabel && (
-                                                            <div className="w-full md:w-[35%] shrink-0 pt-2 pb-1 md:py-0 pr-4">
+                                                            <div className={`w-full md:w-[35%] shrink-0 pt-2 pb-1 md:py-0 pr-4 ${isFieldVisible(field, formValues) && (field.conditions?.length > 0 || field.dependsOn) ? 'opacity-60 grayscale' : ''}`}>
                                                                 <label className="block text-[13px] font-medium text-gray-700">
                                                                     {field.label} {field.required && <span className="text-red-500">*</span>}
                                                                 </label>

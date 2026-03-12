@@ -567,7 +567,7 @@ export default function Templates() {
                                                     </div>
                                                 )}
 
-                                                {activeEditIndex === index && field.type !== 'heading' && field.type !== 'subheading' && (
+                                                {activeEditIndex === index && field.type !== 'button' && (
                                                     <div className="mt-6 border-t border-gray-100 pt-4 pl-11">
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h4 className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Conditional Visibility</h4>
