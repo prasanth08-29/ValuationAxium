@@ -243,6 +243,47 @@ function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }
     );
 }
 
+const computeEffectiveTemplate = (baseTemplate, currentValues) => {
+    if (!baseTemplate || !baseTemplate.sections) return baseTemplate;
+    const newSections = baseTemplate.sections.map(sec => {
+        const newFields = [];
+        sec.fields?.forEach(field => {
+            let repetitions = [ { suffix: '', labelSuffix: '', parentVal: null } ];
+            const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
+            const validRules = rules.filter(c => c.fieldId);
+
+            if (validRules.length === 1 && !validRules[0].value) {
+                const parentId = validRules[0].fieldId;
+                const parentVal = currentValues[parentId];
+                if (Array.isArray(parentVal) && parentVal.length > 0) {
+                    repetitions = parentVal.map(val => ({
+                        suffix: `_rep_${String(val).replace(/[^a-zA-Z0-9]/g, '')}`,
+                        labelSuffix: ` (${val})`,
+                        parentVal: String(val)
+                    }));
+                }
+            }
+
+            repetitions.forEach(rep => {
+                const clonedField = { ...field };
+                if (rep.suffix) {
+                    clonedField.id = `${field.id}${rep.suffix}`;
+                    clonedField.label = `${field.label}${rep.labelSuffix}`;
+                    clonedField.conditions = [{
+                        fieldId: validRules[0].fieldId,
+                        value: rep.parentVal
+                    }];
+                    clonedField.dependsOn = undefined;
+                    clonedField.dependsOnValue = undefined;
+                }
+                newFields.push(clonedField);
+            });
+        });
+        return { ...sec, fields: newFields };
+    });
+    return { ...baseTemplate, sections: newSections };
+};
+
 export default function ValuationForm() {
     const { templateId, id: reportId } = useParams();
     const navigate = useNavigate();
@@ -262,30 +303,8 @@ export default function ValuationForm() {
 
     const { showAlert } = useAlert();
 
-    const schema = useMemo(() => {
-        if (!template || !template.sections) return z.object({});
-        const shape = {};
-        template.sections.forEach(sec => {
-            sec.fields?.forEach(field => {
-                if (field.type !== 'button' && field.type !== 'heading') {
-                    if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
-                        // Required fields must have a non-empty string equivalent
-                        shape[field.id] = z.preprocess(val => {
-                            if (val === undefined || val === null || val === false) return '';
-                            if (typeof val === 'boolean') return val ? 'true' : '';
-                            if (typeof val === 'number') return String(val);
-                            if (Array.isArray(val)) return val.length > 0 ? String(val[0]) : '';
-                            return String(val);
-                        }, z.string().min(1, `${field.label || field.id} is required`));
-                    } else {
-                        // All other optional fields accept any shape, no need to fail validation over type mismatches
-                        shape[field.id] = z.any();
-                    }
-                }
-            });
-        });
-        return z.object(shape);
-    }, [template]);
+    // We don't precompute schema here because we need it to depend on form data dynamically.
+    // Instead we build it inside the resolver.
 
     const isFieldVisible = (field, currentValues) => {
         // Include rules even if they have an empty string (meaning "just check if parent has ANY value/is checked")
@@ -337,25 +356,41 @@ export default function ValuationForm() {
             });
         });
 
-        if (rules.length > 0) {
-            console.log(`Visibility Check for "${field.label || field.id}":`, {
-                rules,
-                currentValuesForDebug: Object.keys(fieldGroups).reduce((acc, id) => ({ ...acc, [id]: currentValues[id] }), {}),
-                isVisible: allMet
-            });
-        }
-
         return allMet;
     };
 
     const { register, handleSubmit, getValues, reset, control, trigger, watch, setValue, formState: { errors } } = useForm({
         resolver: async (data, context, options) => {
-            const result = await zodResolver(schema)(data, context, options);
-            if (result.errors && template?.sections) {
+            const dynamicTemplate = computeEffectiveTemplate(template, data);
+            const shape = {};
+            if (dynamicTemplate && dynamicTemplate.sections) {
+                dynamicTemplate.sections.forEach(sec => {
+                    sec.fields?.forEach(field => {
+                        if (field.type !== 'button' && field.type !== 'heading') {
+                            if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
+                                shape[field.id] = z.preprocess(val => {
+                                    if (val === undefined || val === null || val === false) return '';
+                                    if (typeof val === 'boolean') return val ? 'true' : '';
+                                    if (typeof val === 'number') return String(val);
+                                    if (Array.isArray(val)) return val.length > 0 ? String(val[0]) : '';
+                                    return String(val);
+                                }, z.string().min(1, `${field.label || field.id} is required`));
+                            } else {
+                                shape[field.id] = z.any();
+                            }
+                        }
+                    });
+                });
+            }
+            
+            const dynamicSchema = z.object(shape);
+            const result = await zodResolver(dynamicSchema)(data, context, options);
+
+            if (result.errors && dynamicTemplate?.sections) {
                 const filteredErrors = {};
                 let hasErrors = false;
                 
-                template.sections.forEach(sec => {
+                dynamicTemplate.sections.forEach(sec => {
                     sec.fields?.forEach(field => {
                         if (result.errors[field.id] && isFieldVisible(field, data)) {
                             filteredErrors[field.id] = result.errors[field.id];
@@ -371,13 +406,14 @@ export default function ValuationForm() {
     });
 
     const formValues = useWatch({ control }) || {};
+    const effectiveTemplate = useMemo(() => computeEffectiveTemplate(template, formValues), [template, formValues]);
 
     const steps = useMemo(() => {
-        if (!template || !template.sections) return [];
+        if (!effectiveTemplate || !effectiveTemplate.sections) return [];
 
         const allSteps = [];
 
-        template.sections.forEach(section => {
+        effectiveTemplate.sections.forEach(section => {
             let currentFields = [];
             // Default to section title for fields before the first heading
             let currentTitle = section.title;
@@ -534,6 +570,9 @@ export default function ValuationForm() {
         console.log("Submitting handleSave with data:", formData);
         setSaving(true);
         try {
+            // Recompute effective template to get the actual expanded fields
+            const currentEffectiveTemplate = computeEffectiveTemplate(template, formData);
+            
             const payload = {
                 title: formData['owner_name'] || formData['customer_name'] || `${template.title} Report`,
                 entity: template.entity || 'Custom',
@@ -542,7 +581,7 @@ export default function ValuationForm() {
                 value: formData['ov_total_value'] || formData['summary_market_value'] || 'TBD',
                 data: { ...formData, photos: photos },
                 status: statusParam,
-                sections: template.sections
+                sections: currentEffectiveTemplate.sections
             };
 
             const token = localStorage.getItem('token');
