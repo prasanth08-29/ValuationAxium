@@ -277,7 +277,9 @@ export default function Templates() {
             if (data.success) {
                 showAlert('success', 'Success', 'Template saved successfully!');
                 fetchTemplates(); // Refresh the list
-                setEditingTemplateId(null); // Clear editing state after success
+                if (data.template && (data.template.id || data.template._id)) {
+                    setEditingTemplateId(data.template.id || data.template._id);
+                }
             } else {
                 throw new Error(data.error || 'Saving failed');
             }
@@ -676,7 +678,6 @@ export default function Templates() {
                                                                 >
                                                                     <option value="">+ Make this field depend on...</option>
                                                                     {(() => {
-                                                                        const existingCondFieldIds = (field.conditions || []).map(c => c.fieldId);
                                                                         let currentHeading = "";
                                                                         return fields.filter((f, i) => {
                                                                             if (f.type === 'heading' || f.type === 'subheading') {
@@ -685,7 +686,6 @@ export default function Templates() {
                                                                             }
                                                                             if (i === index) return false;
                                                                             if (f.type === 'button') return false;
-                                                                            if (existingCondFieldIds.includes(f.id)) return false; // Hide from dropdown to prevent duplication
                                                                             f._context = currentHeading; // Temporary context for mapping
                                                                             return true;
                                                                         }).map(f => (
@@ -727,7 +727,6 @@ export default function Templates() {
                                                                                     >
                                                                                         <option value="">Select Field...</option>
                                                                                         {(() => {
-                                                                                            const otherCondFieldIds = (field.conditions || []).filter((_, ci) => ci !== condIdx).map(c => c.fieldId);
                                                                                             let currentHeading = "";
                                                                                             return fields.filter((f, i) => {
                                                                                                 if (f.type === 'heading' || f.type === 'subheading') {
@@ -736,7 +735,6 @@ export default function Templates() {
                                                                                                 }
                                                                                                 if (i === index) return false;
                                                                                                 if (f.type === 'button') return false;
-                                                                                                if (otherCondFieldIds.includes(f.id)) return false;
                                                                                                 f._context = currentHeading;
                                                                                                 return true;
                                                                                             }).map(f => (
