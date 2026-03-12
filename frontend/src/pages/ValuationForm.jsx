@@ -304,7 +304,13 @@ export default function ValuationForm() {
         const fieldGroups = {};
         rules.forEach(r => {
             if (!fieldGroups[r.fieldId]) fieldGroups[r.fieldId] = [];
-            fieldGroups[r.fieldId].push(String(r.value || '').trim().toLowerCase());
+            const ruleValue = String(r.value || '').trim().toLowerCase();
+            // Support comma-separated OR values in a single condition row
+            if (ruleValue.includes(',')) {
+                ruleValue.split(',').forEach(v => fieldGroups[r.fieldId].push(v.trim()));
+            } else {
+                fieldGroups[r.fieldId].push(ruleValue);
+            }
         });
 
         const isTruthy = (v) => {

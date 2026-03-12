@@ -172,6 +172,34 @@ export default function Templates() {
         setFields(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleSyncIds = () => {
+        showConfirm(
+            'Sync Field IDs',
+            'This will update all field IDs to match their current labels. This is useful for cleaning up messed-up templates, but will break any existing reports using this template. Proceed?',
+            () => {
+                setFields(prev => {
+                    const next = [...prev];
+                    const seenIds = new Set();
+                    return next.map(f => {
+                        let baseId = f.label.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60) || 'field';
+                        let finalId = baseId;
+                        let counter = 1;
+                        while (seenIds.has(finalId)) {
+                            finalId = `${baseId}_${counter}`;
+                            counter++;
+                        }
+                        seenIds.add(finalId);
+                        return { ...f, id: finalId };
+                    });
+                });
+                showAlert('success', 'IDs Synced', 'All field IDs have been updated to match their labels.');
+            },
+            'Sync Now'
+        );
+    };
+
+    const [hideConditionalInEditor, setHideConditionalInEditor] = useState(false);
+
     const handleSaveTemplate = async () => {
         if (!templateName.trim() || !fields) {
             setError('Please provide a template name.');
@@ -374,18 +402,39 @@ export default function Templates() {
                                                 </button>
 
                                                 {(editingTemplateId || fields) && (
-                                                    <button
-                                                        onClick={handleClear}
-                                                        className="text-sm px-4 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-transparent hover:border-gray-300"
-                                                    >
-                                                        {editingTemplateId ? "Cancel Editing" : "Cancel & Reselect"}
-                                                    </button>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={handleSyncIds}
+                                                            className="text-xs px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                                                            title="Fix labels and IDs mismatch"
+                                                        >
+                                                            <Settings className="w-4 h-4" />
+                                                            Sync IDs
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setHideConditionalInEditor(!hideConditionalInEditor)}
+                                                            className={`text-xs px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 border ${hideConditionalInEditor ? 'bg-primary-600 text-white border-transparent' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                                                        >
+                                                            {hideConditionalInEditor ? <Eye className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                            {hideConditionalInEditor ? "Show All" : "Focus Mode"}
+                                                        </button>
+                                                        <button
+                                                            onClick={handleClear}
+                                                            className="text-xs px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-transparent hover:border-gray-300"
+                                                        >
+                                                            {editingTemplateId ? "Cancel" : "Cancel"}
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        {fields.map((field, index) => (
+                                        {fields.map((field, index) => {
+                                            const isConditional = !!(field.conditions?.length > 0 || field.dependsOn);
+                                            if (hideConditionalInEditor && isConditional) return null;
+
+                                            return (
                                             <div
                                                 key={index}
                                                 draggable
@@ -393,7 +442,7 @@ export default function Templates() {
                                                 onDragEnter={(e) => dragOverItem.current = index}
                                                 onDragEnd={handleSort}
                                                 onDragOver={(e) => e.preventDefault()}
-                                                className={`group bg-white border ${activeEditIndex === index ? 'border-primary-400 shadow-md ring-4 ring-primary-50' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'} rounded-2xl p-4 transition-all duration-200`}
+                                                className={`group bg-white border ${activeEditIndex === index ? 'border-primary-400 shadow-md ring-4 ring-primary-50' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'} rounded-2xl p-4 transition-all duration-200 ${isConditional ? 'ml-8 border-l-4 border-l-primary-300' : ''}`}
                                             >
                                                 {activeEditIndex === index ? (
                                                     <>
@@ -587,14 +636,22 @@ export default function Templates() {
                                                                     <option value="">+ Make this field depend on...</option>
                                                                     {(() => {
                                                                         const seenIds = new Set();
+                                                                        let currentHeading = "";
                                                                         return fields.filter((f, i) => {
+                                                                            if (f.type === 'heading' || f.type === 'subheading') {
+                                                                                currentHeading = f.label;
+                                                                                return false;
+                                                                            }
                                                                             if (i === index) return false;
                                                                             if (seenIds.has(f.id)) return false;
-                                                                            if (['heading', 'subheading', 'button'].includes(f.type)) return false;
+                                                                            if (f.type === 'button') return false;
                                                                             seenIds.add(f.id);
+                                                                            f._context = currentHeading; // Temporary context for mapping
                                                                             return true;
                                                                         }).map(f => (
-                                                                            <option key={f.id} value={f.id}>{f.label || f.id} ({f.id})</option>
+                                                                            <option key={f.id} value={f.id}>
+                                                                                {f._context ? `${f._context} > ` : ''}{f.label || f.id}
+                                                                            </option>
                                                                         ));
                                                                     })()}
                                                                 </select>
@@ -631,14 +688,22 @@ export default function Templates() {
                                                                                         <option value="">Select Field...</option>
                                                                                         {(() => {
                                                                                             const seenIds = new Set();
+                                                                                            let currentHeading = "";
                                                                                             return fields.filter((f, i) => {
+                                                                                                if (f.type === 'heading' || f.type === 'subheading') {
+                                                                                                    currentHeading = f.label;
+                                                                                                    return false;
+                                                                                                }
                                                                                                 if (i === index) return false;
                                                                                                 if (seenIds.has(f.id)) return false;
-                                                                                                if (['heading', 'subheading', 'button'].includes(f.type)) return false;
+                                                                                                if (f.type === 'button') return false;
                                                                                                 seenIds.add(f.id);
+                                                                                                f._context = currentHeading;
                                                                                                 return true;
                                                                                             }).map(f => (
-                                                                                                <option key={f.id} value={f.id}>{f.label || f.id} ({f.id})</option>
+                                                                                                <option key={f.id} value={f.id}>
+                                                                                                    {f._context ? `${f._context} > ` : ''}{f.label || f.id}
+                                                                                                </option>
                                                                                             ));
                                                                                         })()}
                                                                                     </select>
@@ -723,7 +788,8 @@ export default function Templates() {
                                                 )}
 
                                             </div>
-                                        ))}
+                                        );
+                                        })}
 
                                         <button
                                             onClick={handleAddField}
