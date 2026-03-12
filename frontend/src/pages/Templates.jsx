@@ -596,7 +596,7 @@ export default function Templates() {
                                                         </button>
                                                     </div>
                                                 )}
-                                                {activeEditIndex === index && field.type === 'select' && (
+                                                {activeEditIndex === index && (field.type === 'select' || field.type === 'radio') && (
                                                     <div className="w-full space-y-3 mt-4 pl-8 sm:pl-11">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex flex-col">
