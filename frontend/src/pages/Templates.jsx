@@ -518,6 +518,7 @@ export default function Templates() {
                                                                             <option value="date">Date picker</option>
                                                                             <option value="select">Dropdown</option>
                                                                             <option value="radio">Radio Buttons</option>
+                                                                            <option value="checkboxes">Checkboxes (Multiple)</option>
                                                                             <option value="heading">Section Heading</option>
                                                                             <option value="subheading">Sub Heading</option>
                                                                             <option value="button">Button Action</option>
@@ -598,7 +599,7 @@ export default function Templates() {
                                                         </button>
                                                     </div>
                                                 )}
-                                                {activeEditIndex === index && (field.type === 'select' || field.type === 'radio') && (
+                                                {activeEditIndex === index && (field.type === 'select' || field.type === 'radio' || field.type === 'checkboxes') && (
                                                     <div className="w-full space-y-3 mt-4 pl-8 sm:pl-11">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex flex-col">
@@ -618,11 +619,14 @@ export default function Templates() {
 
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                             {(Array.isArray(field.options) ? field.options : []).map((opt, optIdx) => (
-                                                                <div key={optIdx} className="group/opt flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100 hover:border-primary-100 transition-all">
-                                                                     {field.type === 'radio' && (
-                                                                         <div className="w-4 h-4 rounded-full border-2 border-gray-300 ml-2 shrink-0"></div>
-                                                                     )}
-                                                                     <input
+                                                                    <div key={optIdx} className="group/opt flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100 hover:border-primary-100 transition-all">
+                                                                         {field.type === 'radio' && (
+                                                                             <div className="w-4 h-4 rounded-full border-2 border-gray-300 ml-2 shrink-0"></div>
+                                                                         )}
+                                                                         {field.type === 'checkboxes' && (
+                                                                             <div className="w-4 h-4 rounded border-2 border-gray-300 ml-2 shrink-0"></div>
+                                                                         )}
+                                                                         <input
                                                                         type="text"
                                                                         value={opt}
                                                                         onChange={(e) => {
@@ -708,7 +712,7 @@ export default function Templates() {
                                                                     (Array.isArray(parentField.options) ? parentField.options :
                                                                         (typeof parentField.options === 'string' ? parentField.options.split(',').map(o => o.trim()) : []))
                                                                     : [];
-                                                                const hasOptions = parentField && (parentField.type === 'select' || parentField.type === 'radio') && parentOptions.length > 0;
+                                                                const hasOptions = parentField && (parentField.type === 'select' || parentField.type === 'radio' || parentField.type === 'checkboxes') && parentOptions.length > 0;
 
                                                                 return (
                                                                     <div key={condIdx} className="flex gap-2 items-end group/cond">

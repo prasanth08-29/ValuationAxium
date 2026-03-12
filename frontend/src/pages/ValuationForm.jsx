@@ -881,6 +881,26 @@ export default function ValuationForm() {
                                                                         })
                                                                     )}
                                                                 </div>
+                                                            ) : field.type === 'checkboxes' ? (
+                                                                <div className="flex flex-wrap gap-4 mt-1">
+                                                                    {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
+                                                                        const currentVals = Array.isArray(formValues[field.id]) ? formValues[field.id] : (formValues[field.id] ? [formValues[field.id]] : []);
+                                                                        const isSelected = currentVals.includes(opt);
+                                                                        return (
+                                                                            <label key={opt} className="flex items-center gap-2 cursor-pointer group py-1 transition-all">
+                                                                                <div className="relative flex items-center justify-center shrink-0">
+                                                                                    <input
+                                                                                        type="checkbox"
+                                                                                        value={opt}
+                                                                                        {...register(field.id)}
+                                                                                        className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500 cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                                <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{opt}</span>
+                                                                            </label>
+                                                                        );
+                                                                    })}
+                                                                </div>
                                                             ) : field.type === 'heading' ? null : (
                                                                 <input
                                                                     type={field.type}
