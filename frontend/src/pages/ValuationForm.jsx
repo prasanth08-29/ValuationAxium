@@ -268,27 +268,18 @@ export default function ValuationForm() {
         template.sections.forEach(sec => {
             sec.fields?.forEach(field => {
                 if (field.type !== 'button' && field.type !== 'heading') {
-                    // Check if this is a radio button with no options (renders as a singular checkbox/trigger)
-                    const isCheckboxFallback = field.type === 'radio' && (!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : (typeof field.options === 'string' && !field.options.trim())));
-
-                    if (field.isList || field.type === 'bullets') {
-                        shape[field.id] = z.array(z.string()).optional();
-                    } else if (field.type === 'checkbox' || isCheckboxFallback) {
-                        shape[field.id] = z.boolean().optional().or(z.string().optional());
-                    } else if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
-                        shape[field.id] = z.preprocess(val => {
-                            if (val === undefined || val === null) return '';
-                            if (typeof val === 'boolean') return val ? 'true' : '';
-                            if (typeof val === 'number') return String(val);
-                            return String(val);
-                        }, z.string().min(1, `${field.label || field.id} is required`));
-                    } else {
+                    if (field.required || ['owner_name', 'property_address', 'date'].includes(field.id)) {
+                        // Required fields must have a non-empty string equivalent
                         shape[field.id] = z.preprocess(val => {
                             if (val === undefined || val === null || val === false) return '';
                             if (typeof val === 'boolean') return val ? 'true' : '';
                             if (typeof val === 'number') return String(val);
+                            if (Array.isArray(val)) return val.length > 0 ? String(val[0]) : '';
                             return String(val);
-                        }, z.string().optional().or(z.literal('')));
+                        }, z.string().min(1, `${field.label || field.id} is required`));
+                    } else {
+                        // All other optional fields accept any shape, no need to fail validation over type mismatches
+                        shape[field.id] = z.any();
                     }
                 }
             });
