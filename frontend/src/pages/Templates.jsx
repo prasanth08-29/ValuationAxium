@@ -152,7 +152,17 @@ export default function Templates() {
 
             // Auto-update ID if label changes and it's basically the default or similar
             if (key === 'label' && next[index].id.startsWith('custom_field_')) {
-                next[index].id = value.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60) || next[index].id;
+                let baseId = value.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60);
+                if (baseId) {
+                    let finalId = baseId;
+                    let counter = 1;
+                    // Ensure ID is unique across all fields
+                    while (next.some((f, i) => i !== index && f.id === finalId)) {
+                        finalId = `${baseId}_${counter}`;
+                        counter++;
+                    }
+                    next[index].id = finalId;
+                }
             }
             return next;
         });
@@ -562,7 +572,7 @@ export default function Templates() {
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h4 className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Conditional Visibility</h4>
                                                             <div className="relative group/add">
-                                                                <select
+                                                                 <select
                                                                     value=""
                                                                     onChange={(e) => {
                                                                         const fieldId = e.target.value;
@@ -575,9 +585,18 @@ export default function Templates() {
                                                                     className="text-[10px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 px-3 py-1.5 rounded-lg transition-colors outline-none cursor-pointer appearance-none pr-8"
                                                                 >
                                                                     <option value="">+ Make this field depend on...</option>
-                                                                    {fields.filter((f, i) => i !== index).map(f => (
-                                                                        <option key={f.id} value={f.id}>{f.label || f.id}</option>
-                                                                    ))}
+                                                                    {(() => {
+                                                                        const seenIds = new Set();
+                                                                        return fields.filter((f, i) => {
+                                                                            if (i === index) return false;
+                                                                            if (seenIds.has(f.id)) return false;
+                                                                            if (['heading', 'subheading', 'button'].includes(f.type)) return false;
+                                                                            seenIds.add(f.id);
+                                                                            return true;
+                                                                        }).map(f => (
+                                                                            <option key={f.id} value={f.id}>{f.label || f.id} ({f.id})</option>
+                                                                        ));
+                                                                    })()}
                                                                 </select>
                                                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                                                                     <Plus className="w-3 h-3 text-primary-600" />
@@ -600,7 +619,7 @@ export default function Templates() {
                                                                             <div className="relative">
                                                                                 <label className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Show this field if:</label>
                                                                                 <div className="relative">
-                                                                                    <select
+                                                                                     <select
                                                                                         value={cond.fieldId}
                                                                                         onChange={(e) => {
                                                                                             const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
@@ -610,9 +629,18 @@ export default function Templates() {
                                                                                         className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all appearance-none cursor-pointer"
                                                                                     >
                                                                                         <option value="">Select Field...</option>
-                                                                                        {fields.filter((_, i) => i !== index).map(f => (
-                                                                                            <option key={f.id} value={f.id}>{f.label || f.id}</option>
-                                                                                        ))}
+                                                                                        {(() => {
+                                                                                            const seenIds = new Set();
+                                                                                            return fields.filter((f, i) => {
+                                                                                                if (i === index) return false;
+                                                                                                if (seenIds.has(f.id)) return false;
+                                                                                                if (['heading', 'subheading', 'button'].includes(f.type)) return false;
+                                                                                                seenIds.add(f.id);
+                                                                                                return true;
+                                                                                            }).map(f => (
+                                                                                                <option key={f.id} value={f.id}>{f.label || f.id} ({f.id})</option>
+                                                                                            ));
+                                                                                        })()}
                                                                                     </select>
                                                                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                                                                                         <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
