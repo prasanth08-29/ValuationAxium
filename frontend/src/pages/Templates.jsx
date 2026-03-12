@@ -164,6 +164,30 @@ export default function Templates() {
                     next[index].id = finalId;
                 }
             }
+
+            // Cascade ID updates if 'id' or 'label' changes triggered an ID change
+            if (key === 'id' || key === 'label') {
+                const oldId = prev[index].id;
+                const newId = next[index].id;
+                if (oldId && newId && oldId !== newId) {
+                    return next.map((f, i) => {
+                        if (i === index) return f;
+                        const fw = { ...f };
+                        let didUpdate = false;
+                        if (fw.conditions && Array.isArray(fw.conditions)) {
+                            fw.conditions = fw.conditions.map(c => {
+                                if (c.fieldId === oldId) {
+                                    didUpdate = true;
+                                    return { ...c, fieldId: newId };
+                                }
+                                return c;
+                            });
+                        }
+                        return didUpdate ? fw : f;
+                    });
+                }
+            }
+
             return next;
         });
     };
@@ -180,7 +204,10 @@ export default function Templates() {
                 setFields(prev => {
                     const next = [...prev];
                     const seenIds = new Set();
-                    return next.map(f => {
+                    const idMap = new Map(); // Old ID to New ID
+                    
+                    const updatedFields = next.map(f => {
+                        const oldId = f.id;
                         let baseId = f.label.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60) || 'field';
                         let finalId = baseId;
                         let counter = 1;
@@ -189,10 +216,24 @@ export default function Templates() {
                             counter++;
                         }
                         seenIds.add(finalId);
+                        idMap.set(oldId, finalId);
                         return { ...f, id: finalId };
                     });
+
+                    // Cascade updates to all conditions
+                    return updatedFields.map(f => {
+                        if (f.conditions && Array.isArray(f.conditions)) {
+                            f.conditions = f.conditions.map(c => {
+                                if (idMap.has(c.fieldId)) {
+                                    return { ...c, fieldId: idMap.get(c.fieldId) };
+                                }
+                                return c;
+                            });
+                        }
+                        return f;
+                    });
                 });
-                showAlert('success', 'IDs Synced', 'All field IDs have been updated to match their labels.');
+                showAlert('success', 'IDs Synced', 'All field IDs have been updated and rules re-mapped.');
             },
             'Sync Now'
         );
@@ -635,7 +676,7 @@ export default function Templates() {
                                                                 >
                                                                     <option value="">+ Make this field depend on...</option>
                                                                     {(() => {
-                                                                        const seenIds = new Set();
+                                                                        const existingCondFieldIds = (field.conditions || []).map(c => c.fieldId);
                                                                         let currentHeading = "";
                                                                         return fields.filter((f, i) => {
                                                                             if (f.type === 'heading' || f.type === 'subheading') {
@@ -643,9 +684,8 @@ export default function Templates() {
                                                                                 return false;
                                                                             }
                                                                             if (i === index) return false;
-                                                                            if (seenIds.has(f.id)) return false;
                                                                             if (f.type === 'button') return false;
-                                                                            seenIds.add(f.id);
+                                                                            if (existingCondFieldIds.includes(f.id)) return false; // Hide from dropdown to prevent duplication
                                                                             f._context = currentHeading; // Temporary context for mapping
                                                                             return true;
                                                                         }).map(f => (
@@ -687,7 +727,7 @@ export default function Templates() {
                                                                                     >
                                                                                         <option value="">Select Field...</option>
                                                                                         {(() => {
-                                                                                            const seenIds = new Set();
+                                                                                            const otherCondFieldIds = (field.conditions || []).filter((_, ci) => ci !== condIdx).map(c => c.fieldId);
                                                                                             let currentHeading = "";
                                                                                             return fields.filter((f, i) => {
                                                                                                 if (f.type === 'heading' || f.type === 'subheading') {
@@ -695,9 +735,8 @@ export default function Templates() {
                                                                                                     return false;
                                                                                                 }
                                                                                                 if (i === index) return false;
-                                                                                                if (seenIds.has(f.id)) return false;
                                                                                                 if (f.type === 'button') return false;
-                                                                                                seenIds.add(f.id);
+                                                                                                if (otherCondFieldIds.includes(f.id)) return false;
                                                                                                 f._context = currentHeading;
                                                                                                 return true;
                                                                                             }).map(f => (
@@ -715,24 +754,29 @@ export default function Templates() {
                                                                             <div className="relative">
                                                                                 <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Show if Value is</label>
                                                                                 {hasOptions ? (
-                                                                                    <div className="relative">
-                                                                                        <select
-                                                                                            value={cond.value}
-                                                                                            onChange={(e) => {
-                                                                                                const newConds = [...(field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue }] : []))];
-                                                                                                newConds[condIdx] = { ...newConds[condIdx], value: e.target.value };
-                                                                                                handleUpdateField(index, 'conditions', newConds);
-                                                                                            }}
-                                                                                            className="w-full bg-white border border-gray-200 text-gray-800 text-xs font-medium rounded-lg focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 block p-2 outline-none transition-all appearance-none cursor-pointer"
-                                                                                        >
-                                                                                            <option value="">Select Value...</option>
-                                                                                            {parentOptions.filter(o => o && o.trim()).map(opt => (
-                                                                                                <option key={opt} value={opt}>{opt}</option>
-                                                                                            ))}
-                                                                                        </select>
-                                                                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                                                            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                                                        </div>
+                                                                                    <div className="flex flex-col gap-1.5 mt-1">
+                                                                                        {parentOptions.filter(o => o && o.trim()).map(opt => {
+                                                                                            const currentVals = (cond.value || '').split(',').map(v => v.trim()).filter(v => v);
+                                                                                            const isChecked = currentVals.includes(opt);
+                                                                                            return (
+                                                                                                <label key={opt} className="flex items-center gap-2 cursor-pointer bg-white px-2 py-1.5 rounded border border-gray-100 hover:border-primary-200 transition-colors">
+                                                                                                    <input 
+                                                                                                        type="checkbox"
+                                                                                                        checked={isChecked}
+                                                                                                        onChange={(e) => {
+                                                                                                            let newVals = [...currentVals];
+                                                                                                            if (e.target.checked) newVals.push(opt);
+                                                                                                            else newVals = newVals.filter(v => v !== opt);
+                                                                                                            const newConds = [...(field.conditions || [])];
+                                                                                                            newConds[condIdx] = { ...newConds[condIdx], value: newVals.join(', ') };
+                                                                                                            handleUpdateField(index, 'conditions', newConds);
+                                                                                                        }}
+                                                                                                        className="w-3.5 h-3.5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                                                                                                    />
+                                                                                                    <span className="text-xs text-gray-700 font-medium">{opt}</span>
+                                                                                                </label>
+                                                                                            );
+                                                                                        })}
                                                                                     </div>
                                                                                 ) : (
                                                                                     <input
