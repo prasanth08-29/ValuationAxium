@@ -196,6 +196,28 @@ export default function Templates() {
         setFields(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleDuplicateField = (index) => {
+        setFields(prev => {
+            const next = [...prev];
+            const fieldToClone = JSON.parse(JSON.stringify(next[index]));
+            
+            // Set a new unique ID
+            let baseId = fieldToClone.label ? fieldToClone.label.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 50) : 'field';
+            let finalId = baseId;
+            let counter = 1;
+            while (next.some(f => f.id === finalId)) {
+                finalId = `${baseId}_${counter}`;
+                counter++;
+            }
+            fieldToClone.id = finalId;
+            fieldToClone.label = `${fieldToClone.label} (Copy)`;
+            
+            // Insert it right after the copied field
+            next.splice(index + 1, 0, fieldToClone);
+            return next;
+        });
+    };
+
     const handleSyncIds = () => {
         showConfirm(
             'Sync Field IDs',
@@ -589,6 +611,13 @@ export default function Templates() {
                                                             title="Edit Field"
                                                         >
                                                             <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDuplicateField(index); }}
+                                                            className="p-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                                            title="Duplicate Field"
+                                                        >
+                                                            <Copy className="w-4 h-4" />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveField(index); }}

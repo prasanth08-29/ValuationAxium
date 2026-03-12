@@ -463,7 +463,14 @@ app.post('/api/export/word', async (req, res) => {
                         if (conditions.length > 0) {
                             const allMet = conditions.every(cond => {
                                 const parentValue = data[cond.fieldId];
-                                return String(parentValue || '').toLowerCase() === String(cond.value || '').toLowerCase();
+                                if (parentValue === undefined || parentValue === null || parentValue === '') return false;
+                                
+                                const targetValues = (cond.value || '').split(',').map(v => v.trim().toLowerCase());
+                                const currentValuesList = Array.isArray(parentValue) 
+                                    ? parentValue.map(v => String(v || '').trim().toLowerCase()) 
+                                    : [String(parentValue || '').trim().toLowerCase()];
+
+                                return currentValuesList.some(curr => targetValues.includes(curr));
                             });
                             if (!allMet) return; // Skip hidden field in export
                         }
