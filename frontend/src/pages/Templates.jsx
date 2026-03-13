@@ -34,7 +34,7 @@ export default function Templates() {
 
     const fetchTemplates = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates`);
             if (response.ok) {
                 const data = await response.json();
                 setTemplates(data);
@@ -92,7 +92,7 @@ export default function Templates() {
         formData.append('file', file);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates/upload`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates/upload`, {
                 method: 'POST',
                 body: formData,
             });
@@ -274,8 +274,8 @@ export default function Templates() {
 
         try {
             const url = editingTemplateId
-                ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates/${editingTemplateId}`
-                : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates`;
+                ? `${import.meta.env.VITE_API_URL || ""}/api/templates/${editingTemplateId}`
+                : `${import.meta.env.VITE_API_URL || ""}/api/templates`;
 
             const method = editingTemplateId ? 'PUT' : 'POST';
 
@@ -927,7 +927,7 @@ export default function Templates() {
                                                 'Are you sure you want to remove this template?',
                                                 async () => {
                                                     try {
-                                                        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates/${template.id}`, { method: 'DELETE' });
+                                                        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates/${template.id}`, { method: 'DELETE' });
                                                         if (res.ok) {
                                                             setTemplates(templates.filter(t => t.id !== template.id));
                                                             showAlert('Success', 'Template removed successfully', 'success');

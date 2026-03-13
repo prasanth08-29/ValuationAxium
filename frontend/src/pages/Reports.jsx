@@ -15,7 +15,7 @@ export default function Reports() {
             setLoading(true);
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports?page=${page}&limit=10`, {
+                const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/reports?page=${page}&limit=10`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -42,7 +42,7 @@ export default function Reports() {
                 sections: report.sections,
                 data: report.data
             };
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/export/word`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/export/word`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

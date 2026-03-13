@@ -26,7 +26,7 @@ export default function EntityTemplates() {
     useEffect(() => {
         const fetchTemplates = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates?entity=${entityType}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates?entity=${entityType}`);
                 if (!response.ok) throw new Error('Failed to fetch templates');
                 const data = await response.json();
                 setTemplates(data);
@@ -43,7 +43,7 @@ export default function EntityTemplates() {
 
     const fetchAllTemplates = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates`);
             if (response.ok) {
                 const data = await response.json();
                 setAllTemplates(data);
@@ -58,7 +58,7 @@ export default function EntityTemplates() {
         if (!sourceTemplate) return;
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates/${templateId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates/${templateId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -177,7 +177,7 @@ export default function EntityTemplates() {
                                                 `Are you sure you want to permanently delete the ${template.name} template?`,
                                                 async () => {
                                                     try {
-                                                        const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates/${template.id}`, { method: 'DELETE' });
+                                                        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates/${template.id}`, { method: 'DELETE' });
                                                         if (res.ok) {
                                                             setTemplates(templates.filter(t => t.id !== template.id));
                                                             showAlert('Success', 'Template deleted successfully', 'success');

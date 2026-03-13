@@ -24,7 +24,7 @@ export default function Dashboard() {
         const fetchRecentActivity = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports`, {
+                const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/reports`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -47,7 +47,7 @@ export default function Dashboard() {
 
     const handleTemplateClick = async (entityId) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates?entity=${entityId}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates?entity=${entityId}`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.length > 1) {

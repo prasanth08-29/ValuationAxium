@@ -13,7 +13,10 @@ export default function Login() {
         setError('');
         setLoading(true);
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/login`, {
+            const apiUrl = import.meta.env.VITE_API_URL || "";
+            
+            
+            const res = await fetch(`${apiUrl}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -31,7 +34,12 @@ export default function Login() {
             window.dispatchEvent(new Event('authStateChange'));
             navigate('/dashboard');
         } catch (err) {
-            setError(err.message);
+            console.error('Login error detail:', err);
+            if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+                setError('Could not connect to the backend server. Please ensure it is running on port 5000.');
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }

@@ -517,7 +517,7 @@ export default function ValuationForm() {
                 // We are viewing/editing an existing report
                 try {
                     const token = localStorage.getItem('token');
-                    const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/${reportId}`, {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/reports/${reportId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     if (!response.ok) throw new Error('Failed to fetch report');
@@ -567,7 +567,7 @@ export default function ValuationForm() {
             }
 
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/templates`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates`);
                 if (!response.ok) throw new Error('Failed to fetch templates');
                 const templates = await response.json();
 
@@ -623,8 +623,8 @@ export default function ValuationForm() {
 
             const token = localStorage.getItem('token');
             const url = reportId
-                ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports/${reportId}`
-                : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/reports`;
+                ? `${import.meta.env.VITE_API_URL || ""}/api/reports/${reportId}`
+                : `${import.meta.env.VITE_API_URL || ""}/api/reports`;
             const method = reportId ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
@@ -666,7 +666,7 @@ export default function ValuationForm() {
                 sections: template.sections,
                 data: { ...getValues(), photos: photos }
             };
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/export/word`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/export/word`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
