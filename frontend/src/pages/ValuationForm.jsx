@@ -482,7 +482,7 @@ export default function ValuationForm() {
         });
 
         return [...allSteps, { type: 'photos', title: 'Inspection Media' }];
-    }, [template]);
+    }, [effectiveTemplate]);
 
     const [expandedStep, setExpandedStep] = useState(0);
 
