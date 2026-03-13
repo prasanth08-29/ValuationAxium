@@ -246,40 +246,60 @@ function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }
 const computeEffectiveTemplate = (baseTemplate, currentValues) => {
     if (!baseTemplate || !baseTemplate.sections) return baseTemplate;
     const newSections = baseTemplate.sections.map(sec => {
-        const newFields = [];
+        let finalFields = [];
+        let currentGroup = null;
+
+        const flushGroup = () => {
+            if (!currentGroup) return;
+            const parentVal = currentValues[currentGroup.parentId];
+            if (Array.isArray(parentVal) && parentVal.length > 0) {
+                const sortedVals = [...parentVal].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
+                sortedVals.forEach(val => {
+                    const suffix = `_rep_${String(val).replace(/[^a-zA-Z0-9]/g, '')}`;
+                    const labelSuffix = ` (${val})`;
+                    currentGroup.fields.forEach(field => {
+                        const clonedField = { ...field };
+                        clonedField.id = `${field.id}${suffix}`;
+                        clonedField.label = `${field.label}${labelSuffix}`;
+                        
+                        const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
+                        const validRules = rules.filter(c => c.fieldId);
+                        
+                        clonedField.conditions = [{
+                            fieldId: validRules[0].fieldId,
+                            value: String(val)
+                        }];
+                        clonedField.dependsOn = undefined;
+                        clonedField.dependsOnValue = undefined;
+                        finalFields.push(clonedField);
+                    });
+                });
+            } else {
+                currentGroup.fields.forEach(field => finalFields.push(field));
+            }
+            currentGroup = null;
+        };
+
         sec.fields?.forEach(field => {
-            let repetitions = [ { suffix: '', labelSuffix: '', parentVal: null } ];
             const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
             const validRules = rules.filter(c => c.fieldId);
 
             if (validRules.length === 1 && !validRules[0].value) {
                 const parentId = validRules[0].fieldId;
-                const parentVal = currentValues[parentId];
-                if (Array.isArray(parentVal) && parentVal.length > 0) {
-                    repetitions = parentVal.map(val => ({
-                        suffix: `_rep_${String(val).replace(/[^a-zA-Z0-9]/g, '')}`,
-                        labelSuffix: ` (${val})`,
-                        parentVal: String(val)
-                    }));
+                if (currentGroup && currentGroup.parentId === parentId) {
+                    currentGroup.fields.push(field);
+                } else {
+                    flushGroup();
+                    currentGroup = { parentId, fields: [field] };
                 }
+            } else {
+                flushGroup();
+                finalFields.push(field);
             }
-
-            repetitions.forEach(rep => {
-                const clonedField = { ...field };
-                if (rep.suffix) {
-                    clonedField.id = `${field.id}${rep.suffix}`;
-                    clonedField.label = `${field.label}${rep.labelSuffix}`;
-                    clonedField.conditions = [{
-                        fieldId: validRules[0].fieldId,
-                        value: rep.parentVal
-                    }];
-                    clonedField.dependsOn = undefined;
-                    clonedField.dependsOnValue = undefined;
-                }
-                newFields.push(clonedField);
-            });
         });
-        return { ...sec, fields: newFields };
+        flushGroup();
+
+        return { ...sec, fields: finalFields };
     });
     return { ...baseTemplate, sections: newSections };
 };
