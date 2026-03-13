@@ -14,7 +14,8 @@ export default function Layout() {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        window.dispatchEvent(new Event('authStateChange'));
+        navigate('/login');
     };
 
     return (

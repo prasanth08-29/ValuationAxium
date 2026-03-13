@@ -9,8 +9,24 @@ import Reports from './pages/Reports';
 import Layout from './components/Layout';
 import { AlertProvider } from './context/AlertContext';
 
+import { useState, useEffect } from 'react';
+
 function App() {
-  const isAuthenticated = !!localStorage.getItem('token');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+    
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener('authStateChange', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener('authStateChange', handleAuthChange);
+    };
+  }, []);
 
   return (
     <Router>

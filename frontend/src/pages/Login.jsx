@@ -27,8 +27,9 @@ export default function Login() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
-            // Dispatch event to update App.jsx state if necessary, or just reload/navigate
-            window.location.href = '/dashboard';
+            // Dispatch event to update App.jsx state and navigate
+            window.dispatchEvent(new Event('authStateChange'));
+            navigate('/dashboard');
         } catch (err) {
             setError(err.message);
         } finally {
