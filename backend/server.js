@@ -163,10 +163,24 @@ app.post('/api/templates/upload', upload.single('file'), async (req, res) => {
 
         const uniqueFields = [];
         const seenLabels = new Set();
+        const seenIds = new Set(); // New: Track IDs to ensure uniqueness
+        
         for (const field of validFields) {
             const normalizedLabel = field.label.toLowerCase().replace(/\s+/g, ' ').trim();
             if (!seenLabels.has(normalizedLabel)) {
                 seenLabels.add(normalizedLabel);
+                
+                // Ensure ID is unique even if labels are different but map to same ID
+                let baseId = field.id;
+                let finalId = baseId;
+                let counter = 1;
+                while (seenIds.has(finalId)) {
+                    finalId = `${baseId}_${counter}`;
+                    counter++;
+                }
+                seenIds.add(finalId);
+                field.id = finalId;
+                
                 uniqueFields.push(field);
             }
         }

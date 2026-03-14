@@ -151,7 +151,7 @@ export default function Templates() {
             }
 
             // Auto-update ID if label changes and it's basically the default or similar
-            if (key === 'label' && next[index].id.startsWith('custom_field_')) {
+            if (key === 'label' && (!next[index].id || next[index].id.startsWith('custom_field_') || next[index].id.startsWith('field_'))) {
                 let baseId = value.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase().substring(0, 60);
                 if (baseId) {
                     let finalId = baseId;
@@ -162,6 +162,14 @@ export default function Templates() {
                         counter++;
                     }
                     next[index].id = finalId;
+                }
+            }
+
+            // If manually updating ID, ensure it doesn't conflict (or at least warn)
+            if (key === 'id') {
+                const isDuplicate = next.some((f, i) => i !== index && f.id === value);
+                if (isDuplicate) {
+                    // We allow it while typing but we should show a warning in the UI
                 }
             }
 
@@ -555,12 +563,17 @@ export default function Templates() {
                                                             <div className="pl-11 mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                 <div className="relative">
                                                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Field ID (Unique Key)</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={field.id}
-                                                                        onChange={(e) => handleUpdateField(index, 'id', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                                                                        className="w-full bg-gray-50 border border-gray-200 text-gray-600 text-[11px] font-mono rounded-lg p-2 outline-none focus:border-primary-400 transition-all"
-                                                                    />
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={field.id}
+                                                                            onChange={(e) => handleUpdateField(index, 'id', e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                                                                            className={`w-full ${fields.some((f, i) => i !== index && f.id === field.id) ? 'bg-red-50 border-red-300 text-red-900' : 'bg-gray-50 border-gray-200 text-gray-600'} text-[11px] font-mono rounded-lg p-2 outline-none focus:border-primary-400 transition-all`}
+                                                                        />
+                                                                        {fields.some((f, i) => i !== index && f.id === field.id) && (
+                                                                            <span className="absolute -bottom-4 left-0 text-[8px] text-red-500 font-bold uppercase">Duplicate ID! Will cause data linking</span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                                 <div className="relative">
                                                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Placeholder / Hint</label>
