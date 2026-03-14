@@ -257,7 +257,7 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
                 const allowedStr = currentGroup.allowValue || '';
                 const allowedVals = allowedStr ? allowedStr.split(',').map(s => s.trim().toLowerCase()).filter(s => s) : null;
                 
-                const sortedVals = [...parentVal]
+                const sortedVals = [...new Set(parentVal)]
                     .filter(v => {
                         if (!allowedVals || allowedVals.length === 0) return true;
                         return allowedVals.includes(String(v).trim().toLowerCase());
@@ -294,11 +294,14 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             currentGroup = null;
         };
 
-        sec.fields?.forEach(field => {
-            const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
-            const validRules = rules.filter(c => c.fieldId);
+        // Filter out any already-multiplied fields to avoid exponential growth
+        // if the input sections are already populated with clones (e.g., from a saved report).
+        const baseFields = sec.fields?.filter(f => !f.id?.includes('_rep_')) || [];
 
-            // Trigger grouping if it depends on a single field, EVEN IF value is provided (removed the !value restriction)
+        baseFields.forEach(field => {
+            const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
+            const validRules = rules.filter(c => c && c.fieldId);
+
             if (validRules.length === 1) {
                 const parentId = validRules[0].fieldId;
                 const valueStr = String(validRules[0].value || '').trim();
@@ -523,12 +526,39 @@ export default function ValuationForm() {
                     if (!response.ok) throw new Error('Failed to fetch report');
                     const reportData = await response.json();
 
-                    // Set the structure of the form based on the saved report's sections
-                    setTemplate({
-                        title: reportData.template,
-                        entity: reportData.entity,
-                        sections: reportData.sections
+                    // Load the original template to use as a clean blueprint for dynamic fields
+                    // This prevents exponential multiplication of fields if the report was saved with clones.
+                    const tResponse = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/templates`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
+                    const templates = await tResponse.json();
+                    const originalTemplate = templates.find(t => t.name === reportData.template);
+
+                    if (originalTemplate) {
+                        setTemplate({
+                            title: originalTemplate.name,
+                            entity: originalTemplate.entity,
+                            sections: [
+                                {
+                                    title: 'Template Variables',
+                                    fields: originalTemplate.fields.map(f => ({
+                                        ...f,
+                                        type: (f.type || 'text').toLowerCase(),
+                                        isList: f.isList || false,
+                                        placeholder: f.placeholder || '',
+                                        options: Array.isArray(f.options) ? f.options : (typeof f.options === 'string' ? f.options.split(',').map(s => s.trim()) : [])
+                                    }))
+                                }
+                            ]
+                        });
+                    } else {
+                        // Fallback to saved sections if template is missing
+                        setTemplate({
+                            title: reportData.template,
+                            entity: reportData.entity,
+                            sections: reportData.sections
+                        });
+                    }
 
                     if (reportData.status) {
                         setReportStatus(reportData.status);
