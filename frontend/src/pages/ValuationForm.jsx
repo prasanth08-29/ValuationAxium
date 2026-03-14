@@ -823,19 +823,24 @@ export default function ValuationForm() {
                                             {step.content.fields.map(field => {
                                                 if (!isFieldVisible(field, formValues)) return null;
                                                 
+                                                const fallbackOptions = Array.isArray(field.options) ? field.options : (typeof field.options === 'string' && field.options ? field.options.split(',') : []);
+                                                const validOptions = fallbackOptions.filter(o => typeof o === 'string' && o.trim().length > 0);
+                                                
                                                 // Check if it's a fallback checkbox
-                                                const isCheckboxFallback = field.type === 'radio' && (!field.options || (Array.isArray(field.options) ? field.options.filter(o => o.trim()).length === 0 : !field.options.trim()));
+                                                const isCheckboxFallback = field.type === 'radio' && validOptions.length === 0;
                                                 const hideLeftLabel = isCheckboxFallback || field.type === 'heading' || field.type === 'subheading';
+
+                                                const fieldId = field.id || `unknown_${idx}_${Math.random()}`;
 
                                                 return (
                                                     <div 
-                                                        key={field.id} 
+                                                        key={fieldId} 
                                                         className={`flex flex-col md:flex-row md:items-start md:py-3 ${field.type === 'subheading' ? 'mt-8 mb-2' : 'border-b border-gray-100 last:border-0'} ${(field.conditions?.length > 0 || field.dependsOn) ? 'bg-primary-50/20 border-l-4 border-primary-200 pl-4 my-1 rounded-r-xl transition-all' : ''}`}
                                                     >
                                                         {!hideLeftLabel && (
                                                             <div className={`w-full md:w-[35%] shrink-0 pt-2 pb-1 md:py-0 pr-4 ${isFieldVisible(field, formValues) && (field.conditions?.length > 0 || field.dependsOn) ? 'opacity-60 grayscale' : ''}`}>
                                                                 <label className="block text-[13px] font-medium text-gray-700">
-                                                                    {field.label} {field.required && <span className="text-red-500">*</span>}
+                                                                    {field.label || 'Unnamed Field'} {field.required && <span className="text-red-500">*</span>}
                                                                 </label>
                                                             </div>
                                                         )}
@@ -851,27 +856,27 @@ export default function ValuationForm() {
                                                         <div className={`w-full ${hideLeftLabel && field.type !== 'subheading' ? 'md:ml-[35%]' : 'md:w-[65%]'}`}>
                                                             {field.isList && (field.type === 'text' || field.type === 'textarea' || !field.type) ? (
                                                                 <Controller
-                                                                    name={field.id}
+                                                                    name={fieldId}
                                                                     control={control}
                                                                     defaultValue={[]}
                                                                     render={({ field: { onChange, value } }) => (
-                                                                        <BulletInput value={value} onChange={onChange} label={field.label} />
+                                                                        <BulletInput value={value || []} onChange={onChange} label={field.label || 'Unnamed'} />
                                                                     )}
                                                                 />
                                                             ) : field.type === 'textarea' ? (
                                                                 <textarea
-                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 resize-none h-24 bg-white shadow-sm`}
-                                                                    {...register(field.id)}
+                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[fieldId] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 resize-none h-24 bg-white shadow-sm`}
+                                                                    {...register(fieldId)}
                                                                     placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
                                                                 />
                                                             ) : field.type === 'select' ? (
                                                                 <select
-                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 bg-white shadow-sm`}
-                                                                    {...register(field.id)}
+                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[fieldId] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 bg-white shadow-sm`}
+                                                                    {...register(fieldId)}
                                                                 >
-                                                                    <option value="">Select {field.label}</option>
-                                                                    {field.options?.map(opt => (
-                                                                        <option key={opt} value={opt}>{opt}</option>
+                                                                    <option value="">Select {field.label || 'option'}</option>
+                                                                    {validOptions.map(opt => (
+                                                                        <option key={opt.trim()} value={opt.trim()}>{opt.trim()}</option>
                                                                     ))}
                                                                 </select>
                                                             ) : field.type === 'radio' ? (
@@ -880,32 +885,33 @@ export default function ValuationForm() {
                                                                         <label className="flex items-center gap-3 cursor-pointer group py-1 transition-all">
                                                                             <input
                                                                                 type="checkbox"
-                                                                                {...register(field.id)}
+                                                                                {...register(fieldId)}
                                                                                 className={`w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 border-gray-300 transition-all cursor-pointer`}
                                                                             />
-                                                                            <span className={`text-[13px] font-medium ${errors[field.id] ? 'text-red-600' : 'text-gray-800'} whitespace-nowrap`}>{field.label}</span>
+                                                                            <span className={`text-[13px] font-medium ${errors[fieldId] ? 'text-red-600' : 'text-gray-800'} whitespace-nowrap`}>{field.label}</span>
                                                                         </label>
                                                                     ) : (
-                                                                        (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
-                                                                            const isSelected = formValues[field.id] === opt;
+                                                                        validOptions.map(opt => {
+                                                                            const trimmedOpt = opt.trim();
+                                                                            const isSelected = formValues[fieldId] === trimmedOpt;
                                                                             return (
-                                                                                <label key={opt} className="flex items-center gap-2 cursor-pointer group py-1 transition-all">
+                                                                                <label key={trimmedOpt} className="flex items-center gap-2 cursor-pointer group py-1 transition-all">
                                                                                     <div className="relative flex items-center justify-center shrink-0">
                                                                                         <input
                                                                                             type="radio"
-                                                                                            value={opt}
+                                                                                            value={trimmedOpt}
                                                                                             checked={isSelected}
-                                                                                            {...register(field.id)}
+                                                                                            {...register(fieldId)}
                                                                                             onClick={(e) => {
                                                                                                 if (isSelected) {
                                                                                                     e.preventDefault();
-                                                                                                    setValue(field.id, '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                                                                                                    setValue(fieldId, '', { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                                                                                                 }
                                                                                             }}
                                                                                             className="w-4 h-4 text-cyan-600 border-gray-300 focus:ring-cyan-500 cursor-pointer"
                                                                                         />
                                                                                     </div>
-                                                                                    <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{opt}</span>
+                                                                                    <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{trimmedOpt}</span>
                                                                                 </label>
                                                                             );
                                                                         })
@@ -913,20 +919,21 @@ export default function ValuationForm() {
                                                                 </div>
                                                             ) : field.type === 'checkboxes' ? (
                                                                 <div className="flex flex-wrap gap-4 mt-1">
-                                                                    {(Array.isArray(field.options) ? field.options : (typeof field.options === 'string' ? field.options.split(',').map(o => o.trim()) : [])).filter(o => o && o.trim()).map(opt => {
-                                                                        const currentVals = Array.isArray(formValues[field.id]) ? formValues[field.id] : (formValues[field.id] ? [formValues[field.id]] : []);
-                                                                        const isSelected = currentVals.includes(opt);
+                                                                    {validOptions.map(opt => {
+                                                                        const trimmedOpt = opt.trim();
+                                                                        const currentVals = Array.isArray(formValues[fieldId]) ? formValues[fieldId] : (formValues[fieldId] ? [formValues[fieldId]] : []);
+                                                                        const isSelected = currentVals.includes(trimmedOpt);
                                                                         return (
-                                                                            <label key={opt} className="flex items-center gap-2 cursor-pointer group py-1 transition-all">
+                                                                            <label key={trimmedOpt} className="flex items-center gap-2 cursor-pointer group py-1 transition-all">
                                                                                 <div className="relative flex items-center justify-center shrink-0">
                                                                                     <input
                                                                                         type="checkbox"
-                                                                                        value={opt}
-                                                                                        {...register(field.id)}
+                                                                                        value={trimmedOpt}
+                                                                                        {...register(fieldId)}
                                                                                         className="w-4 h-4 text-cyan-600 border-gray-300 rounded focus:ring-cyan-500 cursor-pointer"
                                                                                     />
                                                                                 </div>
-                                                                                <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{opt}</span>
+                                                                                <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">{trimmedOpt}</span>
                                                                             </label>
                                                                         );
                                                                     })}
@@ -934,15 +941,15 @@ export default function ValuationForm() {
                                                             ) : field.type === 'heading' ? null : (
                                                                 <input
                                                                     type={field.type}
-                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[field.id] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 bg-white shadow-sm`}
-                                                                    {...register(field.id)}
+                                                                    className={`w-full px-3 py-2 rounded-md border ${errors[fieldId] ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500'} transition-all text-sm text-gray-900 bg-white shadow-sm`}
+                                                                    {...register(fieldId)}
                                                                     placeholder={`Enter ${field.label?.toLowerCase() || 'value'}`}
                                                                 />
                                                             )}
-                                                            {errors[field.id] && (
+                                                            {errors[fieldId] && (
                                                                 <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                                                                     <AlertCircle className="w-3 h-3" />
-                                                                    {errors[field.id]?.message}
+                                                                    {errors[fieldId]?.message}
                                                                 </p>
                                                             )}
                                                         </div>
