@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAlert } from '../context/AlertContext';
 
-function BulletInput({ value = [], onChange, label, error, register, id }) {
+function BulletInput({ value = [], onChange }) {
     const [inputValue, setInputValue] = useState("");
 
     const handleKeyDown = (e) => {
@@ -139,7 +139,7 @@ const compressImage = (base64Str, maxWidth = 1200, maxHeight = 1200, quality = 0
     });
 };
 
-function ImageUploadZone({ category, photos, setPhotos, label, withGeo = false }) {
+function ImageUploadZone({ category, photos, setPhotos, withGeo = false }) {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleFiles = async (e, isCamera = false) => {
@@ -325,7 +325,7 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
 };
 
 export default function ValuationForm() {
-    const { templateId, id: reportId } = useParams();
+    const { templateId: _templateId, id: reportId } = useParams();
     const navigate = useNavigate();
 
     const [template, setTemplate] = useState(null);
@@ -333,7 +333,6 @@ export default function ValuationForm() {
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeStep, setActiveStep] = useState(0);
     const [reportStatus, setReportStatus] = useState('Draft');
     const [photos, setPhotos] = useState({
         guideline: [],
@@ -601,7 +600,7 @@ export default function ValuationForm() {
                 if (!response.ok) throw new Error('Failed to fetch templates');
                 const templates = await response.json();
 
-                const found = templates.find(t => t.id === templateId);
+                const found = templates.find(t => t.id === _templateId);
                 if (found) {
                     // Convert simple flat fields to a section structure so the existing UI renders it
                     setTemplate({
@@ -631,7 +630,7 @@ export default function ValuationForm() {
         };
 
         fetchTemplateData();
-    }, [templateId, reportId, reset]);
+    }, [_templateId, reportId, reset]);
 
     const handleSave = async (formData, statusParam = 'Completed') => {
         console.log("Submitting handleSave with data:", formData);
