@@ -253,7 +253,13 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             if (!currentGroup) return;
             const parentVal = currentValues[currentGroup.parentId];
             
-            if (Array.isArray(parentVal) && parentVal.length > 0) {
+            const isRepeatableGroup = currentGroup && currentGroup.parentId && (
+                currentGroup.parentId.toLowerCase().includes('floor') || 
+                currentGroup.parentId.toLowerCase().includes('select') ||
+                currentGroup.fields.some(f => f.isRepeatable)
+            );
+
+            if (Array.isArray(parentVal) && parentVal.length > 0 && isRepeatableGroup) {
                 const allowedStr = currentGroup.allowValue || '';
                 const allowedVals = allowedStr ? allowedStr.split(',').map(s => s.trim().toLowerCase()).filter(s => s) : null;
                 
