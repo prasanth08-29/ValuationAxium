@@ -1,0 +1,55 @@
+[14] Label: Assuming the entire property is let out, the probable monthly rent and advance
+     ID: assuming_the_entire_property_is_let_out__the_probable_monthl
+     Conds: undefined
+     Deps: undefined
+
+[15] Label: Whether the building plan has been approved?
+     ID: whether_the_building_plan_has_been_approved_
+     Conds: undefined
+     Deps: undefined
+
+[16] Label: If yes, date of approval, approving authority, and whether the building has been constructed as per the approved plan at the time of inspection
+     ID: if_yes__date_of_approval__approving_authority__and_whether_t
+     Conds: undefined
+     Deps: undefined
+
+[17] Label: If no, the reason for non-approval
+     ID: if_no__the_reason_for_non_approval
+     Conds: undefined
+     Deps: undefined
+
+[18] Label: General Remarks
+     ID: general_remarks
+     Conds: undefined
+     Deps: undefined
+
+[19] Label: The total area (Extent of the site/Land)
+     ID: the_total_area__extent_of_the_site_land_
+     Conds: undefined
+     Deps: undefined
+
+[20] Label: Description of the site/land
+     ID: description_of_the_site_land
+     Conds: undefined
+     Deps: undefined
+
+[21] Label: Character of locality
+     ID: character_of_locality
+     Conds: undefined
+     Deps: undefined
+
+[22] Label: Class of locality
+     ID: class_of_locality
+     Conds: undefined
+     Deps: undefined
+
+[23] Label: Classification
+     ID: classification
+     Conds: undefined
+     Deps: undefined
+
+[24] Label: Development of surrounding areas
+     ID: development_of_surrounding_areas
+     Conds: undefined
+     Deps: undefined
+

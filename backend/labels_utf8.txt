@@ -1,0 +1,81 @@
+﻿All labels:
+0 Name of the panel valuer
+1 Name of the party/owner
+2 Address of the property
+3 Name/s of the Reported owner/ name/s of persons in whose names/s the property registered and address
+4 Purpose of valuation
+5 List of documents produced for perusal
+6 Date of inspection
+7 Date of valuation
+8 Approximate Distance from the branch to the property
+9 Situation/location/brief description of the land / site
+10 Lat & long
+11 Google Map Link
+12 Boundary Details of the Property as per Document
+13 Boundary Details of the Property as per Site
+14 Assuming the entire property is let out, the probable monthly rent and advance
+15 Whether the building plan has been approved?
+16 If yes, date of approval, approving authority, and whether the building has been constructed as per the approved plan at the time of inspection
+17 If no, the reason for non-approval
+18 General Remarks
+19 The total area (Extent of the site/Land)
+20 Description of the site/land
+21 Character of locality
+22 Class of locality
+23 Classification
+24 Development of surrounding areas
+25 Is the locality subjected to frequent flooding
+26 Feasibility to the civil amenities like schools, hospital, offices, market etc.
+27 Shape of land
+28 Type of use to which it can be put
+29 Any other restriction of usage
+30 Nature of right, whether lease hold
+31 Road facility
+32 Is it a corner plot
+33 Lift
+34 Carpark
+35 Water supply/potentiality
+36 Underground sewerage system
+37 Any other sentimental social issue Which may affect the value.
+38 Type of construction
+39 Quality of construction
+40 Appearance of the building
+41 Number of floors
+42 Maintenance of the building
+43 Description of the building
+44 Area Details
+45 Foundation
+46 Superstructure
+47 Roof
+48 Doors
+49 Windows
+50 Age of the building
+51 Estimated further life of the building
+52 Depreciation
+53 Replacement Rate of Building
+54 Extent of Land as per deed
+55 Extent of Land as per Patta
+56 Extent of Land for Valuation
+57 Extent of Building for Valuation
+58 Guideline Value of Property per Sq Ft
+59 Prevailing unit market rate of land
+60 Adopted rate of valuation
+61 Building Valuation
+62 Remarks about the property
+63 Land Extent
+64 Building Extent
+65 Guide Line Value
+66 Guide Line Value of Land
+67 Guideline Value of Building
+68 Guide Line Value of Property
+69 Adopted Market Value of Land
+70 Value of Land
+71 Value of Building
+72 Total Value of Property
+73 Total Property
+74 Fair Market Value of the above said property
+75 Realizable Sale Value
+76 Distress Sale Value
+77 Total Guideline Value of the above said property
+78 Enclosures
+79 GEO-CO ORDINATES

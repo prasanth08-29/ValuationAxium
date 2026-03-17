@@ -1,0 +1,26 @@
+[
+  {
+    "id": "whether_the_building_plan_has_been_approved_",
+    "label": "Whether the building plan has been approved?",
+    "type": "text",
+    "placeholder": "Enter Whether the building plan has been appro..."
+  },
+  {
+    "id": "if_yes__date_of_approval__approving_authority__and_whether_t",
+    "label": "If yes, date of approval, approving authority, and whether the building has been constructed as per the approved plan at the time of inspection",
+    "type": "text",
+    "placeholder": "Enter If yes, date of approval, approving auth..."
+  },
+  {
+    "id": "if_no__the_reason_for_non_approval",
+    "label": "If no, the reason for non-approval",
+    "type": "text",
+    "placeholder": "Enter If no, the reason for non-approval..."
+  },
+  {
+    "id": "general_remarks",
+    "label": "General Remarks",
+    "type": "text",
+    "placeholder": "Enter General Remarks..."
+  }
+]

@@ -1,0 +1,493 @@
+﻿{
+  "_id": "69a0932d300b90032b910177",
+  "name": "JK Bank Valuation",
+  "entity": "bank",
+  "fields": [
+    {
+      "id": "name_of_the_panel_valuer",
+      "label": "Name of the panel valuer",
+      "type": "text",
+      "placeholder": "Enter Name of the panel valuer...",
+      "isList": true
+    },
+    {
+      "id": "name_of_the_party_owner",
+      "label": "Name of the party/owner",
+      "type": "text",
+      "placeholder": "Enter Name of the party/owner...",
+      "isList": true
+    },
+    {
+      "id": "address_of_the_property",
+      "label": "Address of the property",
+      "type": "text",
+      "placeholder": "Enter Address of the property..."
+    },
+    {
+      "id": "name_s_of_the_reported_owner__name_s_of_persons_in_whose_nam",
+      "label": "Name/s of the Reported owner/ name/s of persons in whose names/s the property registered and address",
+      "type": "text",
+      "placeholder": "Enter Name/s of the Reported owner/ name/s of ..."
+    },
+    {
+      "id": "purpose_of_valuation",
+      "label": "Purpose of valuation",
+      "type": "text",
+      "placeholder": "Enter Purpose of valuation..."
+    },
+    {
+      "id": "list_of_documents_produced_for_perusal",
+      "label": "List of documents produced for perusal",
+      "type": "text",
+      "placeholder": "Enter List of documents produced for perusal..."
+    },
+    {
+      "id": "date_of_inspection",
+      "label": "Date of inspection",
+      "type": "text",
+      "placeholder": "Enter Date of inspection..."
+    },
+    {
+      "id": "date_of_valuation",
+      "label": "Date of valuation",
+      "type": "text",
+      "placeholder": "Enter Date of valuation..."
+    },
+    {
+      "id": "approximate_distance_from_the_branch_to_the_property",
+      "label": "Approximate Distance from the branch to the property",
+      "type": "text",
+      "placeholder": "Enter Approximate Distance from the branch to ..."
+    },
+    {
+      "id": "situation_location_brief_description_of_the_land___site",
+      "label": "Situation/location/brief description of the land / site",
+      "type": "text",
+      "placeholder": "Enter Situation/location/brief description of ..."
+    },
+    {
+      "id": "lat___long",
+      "label": "Lat & long",
+      "type": "text",
+      "placeholder": "Enter Lat & long...",
+      "isList": true
+    },
+    {
+      "id": "google_map_link",
+      "label": "Google Map Link",
+      "type": "text",
+      "placeholder": "Enter Google Map Link..."
+    },
+    {
+      "id": "boundary_details_of_the_property_as_per_document",
+      "label": "Boundary Details of the Property as per Document",
+      "type": "text",
+      "placeholder": "Enter Boundary Details of the Property as per ..."
+    },
+    {
+      "id": "boundary_details_of_the_property_as_per_site",
+      "label": "Boundary Details of the Property as per Site",
+      "type": "text",
+      "placeholder": "Enter Boundary Details of the Property as per ..."
+    },
+    {
+      "id": "assuming_the_entire_property_is_let_out__the_probable_monthl",
+      "label": "Assuming the entire property is let out, the probable monthly rent and advance",
+      "type": "text",
+      "placeholder": "Enter Assuming the entire property is let out,..."
+    },
+    {
+      "id": "whether_the_building_plan_has_been_approved_",
+      "label": "Whether the building plan has been approved?",
+      "type": "text",
+      "placeholder": "Enter Whether the building plan has been appro..."
+    },
+    {
+      "id": "if_yes__date_of_approval__approving_authority__and_whether_t",
+      "label": "If yes, date of approval, approving authority, and whether the building has been constructed as per the approved plan at the time of inspection",
+      "type": "text",
+      "placeholder": "Enter If yes, date of approval, approving auth..."
+    },
+    {
+      "id": "if_no__the_reason_for_non_approval",
+      "label": "If no, the reason for non-approval",
+      "type": "text",
+      "placeholder": "Enter If no, the reason for non-approval..."
+    },
+    {
+      "id": "general_remarks",
+      "label": "General Remarks",
+      "type": "text",
+      "placeholder": "Enter General Remarks..."
+    },
+    {
+      "id": "the_total_area__extent_of_the_site_land_",
+      "label": "The total area (Extent of the site/Land)",
+      "type": "text",
+      "placeholder": "Enter The total area (Extent of the site/Land)..."
+    },
+    {
+      "id": "description_of_the_site_land",
+      "label": "Description of the site/land",
+      "type": "text",
+      "placeholder": "Enter Description of the site/land..."
+    },
+    {
+      "id": "character_of_locality",
+      "label": "Character of locality",
+      "type": "text",
+      "placeholder": "Enter Character of locality..."
+    },
+    {
+      "id": "class_of_locality",
+      "label": "Class of locality",
+      "type": "text",
+      "placeholder": "Enter Class of locality..."
+    },
+    {
+      "id": "classification",
+      "label": "Classification",
+      "type": "text",
+      "placeholder": "Enter Classification..."
+    },
+    {
+      "id": "development_of_surrounding_areas",
+      "label": "Development of surrounding areas",
+      "type": "text",
+      "placeholder": "Enter Development of surrounding areas..."
+    },
+    {
+      "id": "is_the_locality_subjected_to_frequent_flooding",
+      "label": "Is the locality subjected to frequent flooding",
+      "type": "text",
+      "placeholder": "Enter Is the locality subjected to frequent fl..."
+    },
+    {
+      "id": "feasibility_to_the_civil_amenities_like_schools__hospital__o",
+      "label": "Feasibility to the civil amenities like schools, hospital, offices, market etc.",
+      "type": "text",
+      "placeholder": "Enter Feasibility to the civil amenities like ..."
+    },
+    {
+      "id": "shape_of_land",
+      "label": "Shape of land",
+      "type": "text",
+      "placeholder": "Enter Shape of land..."
+    },
+    {
+      "id": "type_of_use_to_which_it_can_be_put",
+      "label": "Type of use to which it can be put",
+      "type": "text",
+      "placeholder": "Enter Type of use to which it can be put..."
+    },
+    {
+      "id": "any_other_restriction_of_usage",
+      "label": "Any other restriction of usage",
+      "type": "text",
+      "placeholder": "Enter Any other restriction of usage..."
+    },
+    {
+      "id": "nature_of_right__whether_lease_hold",
+      "label": "Nature of right, whether lease hold",
+      "type": "text",
+      "placeholder": "Enter Nature of right, whether lease hold..."
+    },
+    {
+      "id": "road_facility",
+      "label": "Road facility",
+      "type": "text",
+      "placeholder": "Enter Road facility..."
+    },
+    {
+      "id": "is_it_a_corner_plot",
+      "label": "Is it a corner plot",
+      "type": "text",
+      "placeholder": "Enter Is it a corner plot..."
+    },
+    {
+      "id": "lift",
+      "label": "Lift",
+      "type": "text",
+      "placeholder": "Enter Lift..."
+    },
+    {
+      "id": "carpark",
+      "label": "Carpark",
+      "type": "text",
+      "placeholder": "Enter Carpark..."
+    },
+    {
+      "id": "water_supply_potentiality",
+      "label": "Water supply/potentiality",
+      "type": "text",
+      "placeholder": "Enter Water supply/potentiality..."
+    },
+    {
+      "id": "underground_sewerage_system",
+      "label": "Underground sewerage system",
+      "type": "text",
+      "placeholder": "Enter Underground sewerage system..."
+    },
+    {
+      "id": "any_other_sentimental_social_issue_which_may_affect_the_valu",
+      "label": "Any other sentimental social issue Which may affect the value.",
+      "type": "text",
+      "placeholder": "Enter Any other sentimental social issue Which..."
+    },
+    {
+      "id": "type_of_construction",
+      "label": "Type of construction",
+      "type": "text",
+      "placeholder": "Enter Type of construction..."
+    },
+    {
+      "id": "quality_of_construction",
+      "label": "Quality of construction",
+      "type": "text",
+      "placeholder": "Enter Quality of construction..."
+    },
+    {
+      "id": "appearance_of_the_building",
+      "label": "Appearance of the building",
+      "type": "text",
+      "placeholder": "Enter Appearance of the building..."
+    },
+    {
+      "id": "number_of_floors",
+      "label": "Number of floors",
+      "type": "text",
+      "placeholder": "Enter Number of floors..."
+    },
+    {
+      "id": "maintenance_of_the_building",
+      "label": "Maintenance of the building",
+      "type": "text",
+      "placeholder": "Enter Maintenance of the building..."
+    },
+    {
+      "id": "description_of_the_building",
+      "label": "Description of the building",
+      "type": "text",
+      "placeholder": "Enter Description of the building..."
+    },
+    {
+      "id": "area_details",
+      "label": "Area Details",
+      "type": "text",
+      "placeholder": "Enter Area Details..."
+    },
+    {
+      "id": "foundation",
+      "label": "Foundation",
+      "type": "text",
+      "placeholder": "Enter Foundation..."
+    },
+    {
+      "id": "superstructure",
+      "label": "Superstructure",
+      "type": "text",
+      "placeholder": "Enter Superstructure..."
+    },
+    {
+      "id": "roof",
+      "label": "Roof",
+      "type": "text",
+      "placeholder": "Enter Roof..."
+    },
+    {
+      "id": "doors",
+      "label": "Doors",
+      "type": "text",
+      "placeholder": "Enter Doors..."
+    },
+    {
+      "id": "windows",
+      "label": "Windows",
+      "type": "text",
+      "placeholder": "Enter Windows..."
+    },
+    {
+      "id": "age_of_the_building",
+      "label": "Age of the building",
+      "type": "text",
+      "placeholder": "Enter Age of the building..."
+    },
+    {
+      "id": "estimated_further_life_of_the_building",
+      "label": "Estimated further life of the building",
+      "type": "text",
+      "placeholder": "Enter Estimated further life of the building..."
+    },
+    {
+      "id": "depreciation",
+      "label": "Depreciation",
+      "type": "text",
+      "placeholder": "Enter Depreciation..."
+    },
+    {
+      "id": "replacement_rate_of_building",
+      "label": "Replacement Rate of Building",
+      "type": "text",
+      "placeholder": "Enter Replacement Rate of Building..."
+    },
+    {
+      "id": "extent_of_land_as_per_deed",
+      "label": "Extent of Land as per deed",
+      "type": "text",
+      "placeholder": "Enter Extent of Land as per deed..."
+    },
+    {
+      "id": "extent_of_land_as_per_patta",
+      "label": "Extent of Land as per Patta",
+      "type": "text",
+      "placeholder": "Enter Extent of Land as per Patta..."
+    },
+    {
+      "id": "extent_of_land_for_valuation",
+      "label": "Extent of Land for Valuation",
+      "type": "text",
+      "placeholder": "Enter Extent of Land for Valuation..."
+    },
+    {
+      "id": "extent_of_building_for_valuation",
+      "label": "Extent of Building for Valuation",
+      "type": "text",
+      "placeholder": "Enter Extent of Building for Valuation..."
+    },
+    {
+      "id": "guideline_value_of_property_per_sq_ft",
+      "label": "Guideline Value of Property per Sq Ft",
+      "type": "text",
+      "placeholder": "Enter Guideline Value of Property per Sq Ft..."
+    },
+    {
+      "id": "prevailing_unit_market_rate_of_land",
+      "label": "Prevailing unit market rate of land",
+      "type": "text",
+      "placeholder": "Enter Prevailing unit market rate of land..."
+    },
+    {
+      "id": "adopted_rate_of_valuation",
+      "label": "Adopted rate of valuation",
+      "type": "text",
+      "placeholder": "Enter Adopted rate of valuation..."
+    },
+    {
+      "id": "building_valuation",
+      "label": "Building Valuation",
+      "type": "text",
+      "placeholder": "Enter Building Valuation..."
+    },
+    {
+      "id": "remarks_about_the_property",
+      "label": "Remarks about the property",
+      "type": "text",
+      "placeholder": "Enter Remarks about the property..."
+    },
+    {
+      "id": "land_extent",
+      "label": "Land Extent",
+      "type": "text",
+      "placeholder": "Enter Land Extent..."
+    },
+    {
+      "id": "building_extent",
+      "label": "Building Extent",
+      "type": "text",
+      "placeholder": "Enter Building Extent..."
+    },
+    {
+      "id": "guide_line_value",
+      "label": "Guide Line Value",
+      "type": "text",
+      "placeholder": "Enter Guide Line Value..."
+    },
+    {
+      "id": "guide_line_value_of_land",
+      "label": "Guide Line Value of Land",
+      "type": "text",
+      "placeholder": "Enter Guide Line Value of Land..."
+    },
+    {
+      "id": "guideline_value_of_building",
+      "label": "Guideline Value of Building",
+      "type": "text",
+      "placeholder": "Enter Guideline Value of Building..."
+    },
+    {
+      "id": "guide_line_value_of_property",
+      "label": "Guide Line Value of Property",
+      "type": "text",
+      "placeholder": "Enter Guide Line Value of Property..."
+    },
+    {
+      "id": "adopted_market_value_of_land",
+      "label": "Adopted Market Value of Land",
+      "type": "text",
+      "placeholder": "Enter Adopted Market Value of Land..."
+    },
+    {
+      "id": "value_of_land",
+      "label": "Value of Land",
+      "type": "text",
+      "placeholder": "Enter Value of Land..."
+    },
+    {
+      "id": "value_of_building",
+      "label": "Value of Building",
+      "type": "text",
+      "placeholder": "Enter Value of Building..."
+    },
+    {
+      "id": "total_value_of_property",
+      "label": "Total Value of Property",
+      "type": "text",
+      "placeholder": "Enter Total Value of Property..."
+    },
+    {
+      "id": "total_property",
+      "label": "Total Property",
+      "type": "text",
+      "placeholder": "Enter Total Property..."
+    },
+    {
+      "id": "fair_market_value_of_the_above_said_property",
+      "label": "Fair Market Value of the above said property",
+      "type": "text",
+      "placeholder": "Enter Fair Market Value of the above said prop..."
+    },
+    {
+      "id": "realizable_sale_value",
+      "label": "Realizable Sale Value",
+      "type": "text",
+      "placeholder": "Enter Realizable Sale Value..."
+    },
+    {
+      "id": "distress_sale_value",
+      "label": "Distress Sale Value",
+      "type": "text",
+      "placeholder": "Enter Distress Sale Value..."
+    },
+    {
+      "id": "total_guideline_value_of_the_above_said_property",
+      "label": "Total Guideline Value of the above said property",
+      "type": "text",
+      "placeholder": "Enter Total Guideline Value of the above said ..."
+    },
+    {
+      "id": "enclosures",
+      "label": "Enclosures",
+      "type": "text",
+      "placeholder": "Enter Enclosures..."
+    },
+    {
+      "id": "geo_co_ordinates",
+      "label": "GEO-CO ORDINATES",
+      "type": "text",
+      "placeholder": "Enter GEO-CO ORDINATES..."
+    }
+  ],
+  "createdAt": "2026-02-26T18:38:37.388Z",
+  "updatedAt": "2026-03-09T10:53:21.806Z",
+  "__v": 2
+}

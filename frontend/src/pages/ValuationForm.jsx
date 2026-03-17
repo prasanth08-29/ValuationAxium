@@ -253,6 +253,8 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             if (!currentGroup) return;
             const parentVal = currentValues[currentGroup.parentId];
             
+            // Stricter check for repeatable groups (e.g. floors)
+            // Field 16 should NEVER be in a repeatable group unless explicitly marked
             const isRepeatableGroup = currentGroup && currentGroup.parentId && (
                 currentGroup.parentId.toLowerCase().includes('floor') || 
                 currentGroup.parentId.toLowerCase().includes('select') ||
@@ -280,14 +282,18 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
                             clonedField.label = `${field.label}${labelSuffix}`;
                             
                             const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
-                            const validRules = rules.filter(c => c.fieldId);
+                            const validRules = rules.filter(c => c && c.fieldId);
                             
-                            clonedField.conditions = [{
-                                fieldId: validRules[0].fieldId,
-                                value: String(val)
-                            }];
-                            clonedField.dependsOn = undefined;
-                            clonedField.dependsOnValue = undefined;
+                            // Ensure the clone depends on specifically this option
+                            if (validRules.length > 0) {
+                                clonedField.conditions = [{
+                                    fieldId: validRules[0].fieldId,
+                                    value: String(val)
+                                }];
+                                clonedField.dependsOn = undefined;
+                                clonedField.dependsOnValue = undefined;
+                            }
+                            
                             finalFields.push(clonedField);
                         });
                     });
@@ -300,11 +306,17 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             currentGroup = null;
         };
 
-        // Filter out any already-multiplied fields to avoid exponential growth
-        // if the input sections are already populated with clones (e.g., from a saved report).
+        // Filter out any already-multiplied fields and ensure base fields are unique
         const baseFields = sec.fields?.filter(f => !f.id?.includes('_rep_')) || [];
+        
+        // Final deduplication set to prevent triple-rendering of corrupted data
+        const seenIdsInSec = new Set();
 
         baseFields.forEach(field => {
+            // If we've already added this base field ID in this section, skip it
+            if (field.id && seenIdsInSec.has(field.id)) return;
+            if (field.id) seenIdsInSec.add(field.id);
+
             const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
             const validRules = rules.filter(c => c && c.fieldId);
 
