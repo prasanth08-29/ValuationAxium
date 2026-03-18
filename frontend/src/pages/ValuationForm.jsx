@@ -317,17 +317,10 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             currentGroup = null;
         };
 
-        // Filter out any already-multiplied fields and ensure base fields are unique
+        // Filter out any already-multiplied fields to prepare for clean generation
         const baseFields = sec.fields?.filter(f => !f.id?.includes('_rep_')) || [];
-        
-        // Final deduplication set to prevent triple-rendering of corrupted data
-        const seenIdsInSec = new Set();
 
         baseFields.forEach(field => {
-            // If we've already added this base field ID in this section, skip it
-            if (field.id && seenIdsInSec.has(field.id)) return;
-            if (field.id) seenIdsInSec.add(field.id);
-
             const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
             const validRules = rules.filter(c => c && c.fieldId);
 
