@@ -253,19 +253,27 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             if (!currentGroup) return;
             const parentVal = currentValues[currentGroup.parentId];
             
+            // Look up parent field to check its label or type
+            const parentField = baseTemplate.sections.flatMap(s => s.fields || []).find(f => f.id === currentGroup.parentId);
+            const parentLabel = parentField ? (parentField.label || '').toLowerCase() : '';
+
             // Stricter check for repeatable groups (e.g. floors)
             // Field 16 should NEVER be in a repeatable group unless explicitly marked
             const isRepeatableGroup = currentGroup && currentGroup.parentId && (
                 currentGroup.parentId.toLowerCase().includes('floor') || 
                 currentGroup.parentId.toLowerCase().includes('select') ||
+                parentLabel.includes('floor') ||
                 currentGroup.fields.some(f => f.isRepeatable)
             );
 
-            if (Array.isArray(parentVal) && parentVal.length > 0 && isRepeatableGroup) {
+            // Ensure parentVal is treated as an array to trigger repetitions
+            const parentValArray = Array.isArray(parentVal) ? parentVal : (parentVal === true || (typeof parentVal === 'string' && parentVal !== 'false' && parentVal !== '') ? [parentVal] : []);
+
+            if (parentValArray.length > 0 && isRepeatableGroup) {
                 const allowedStr = currentGroup.allowValue || '';
                 const allowedVals = allowedStr ? allowedStr.split(',').map(s => s.trim().toLowerCase()).filter(s => s) : null;
                 
-                const sortedVals = [...new Set(parentVal)]
+                const sortedVals = [...new Set(parentValArray)]
                     .filter(v => {
                         if (!allowedVals || allowedVals.length === 0) return true;
                         return allowedVals.includes(String(v).trim().toLowerCase());
