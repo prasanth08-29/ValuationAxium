@@ -140,6 +140,20 @@ export default function Templates() {
         }]);
     };
 
+    const handleAddFieldAtIndex = (index) => {
+        setFields(prev => {
+            const next = [...prev];
+            next.splice(index, 0, {
+                id: `custom_field_${Date.now()}`,
+                label: 'New Custom Field',
+                type: 'text',
+                placeholder: 'Enter detail...'
+            });
+            return next;
+        });
+        setActiveEditIndex(index);
+    };
+
     const handleUpdateField = (index, key, value) => {
         setFields(prev => {
             const next = [...prev];
@@ -515,8 +529,17 @@ export default function Templates() {
                                                 onDragEnter={(e) => dragOverItem.current = index}
                                                 onDragEnd={handleSort}
                                                 onDragOver={(e) => e.preventDefault()}
-                                                className={`group bg-white border ${activeEditIndex === index ? 'border-primary-400 shadow-md ring-4 ring-primary-50' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'} rounded-2xl p-4 transition-all duration-200 ${isConditional ? 'ml-8 border-l-4 border-l-primary-300' : ''}`}
+                                                className={`relative group bg-white border ${activeEditIndex === index ? 'border-primary-400 shadow-md ring-4 ring-primary-50' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'} rounded-2xl p-4 transition-all duration-200 ${isConditional ? 'ml-8 border-l-4 border-l-primary-300' : ''}`}
                                             >
+                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none group-hover:pointer-events-auto">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleAddFieldAtIndex(index); }}
+                                                        className="bg-primary-500 text-white p-1 rounded-full shadow-md hover:bg-primary-600 hover:scale-110 transition-all cursor-pointer border-2 border-white flex items-center justify-center"
+                                                        title="Add field here"
+                                                    >
+                                                        <Plus className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
                                                 {activeEditIndex === index ? (
                                                     <>
                                                         <div className="flex items-start sm:items-center gap-2 sm:gap-4">

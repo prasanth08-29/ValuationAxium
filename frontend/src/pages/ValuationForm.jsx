@@ -710,7 +710,7 @@ export default function ValuationForm() {
         try {
             const payload = {
                 title: template.title,
-                sections: template.sections,
+                sections: effectiveTemplate.sections,
                 data: { ...getValues(), photos: photos }
             };
             const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/export/word`, {
