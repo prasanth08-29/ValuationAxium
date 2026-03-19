@@ -273,14 +273,7 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
             const parentValArray = Array.isArray(parentVal) ? parentVal : (parentType === 'checkboxes' && (parentVal === true || (typeof parentVal === 'string' && parentVal !== 'false' && parentVal !== '')) ? [parentVal] : []);
 
             if (parentValArray.length > 0 && isRepeatableGroup) {
-                const allowedStr = currentGroup.allowValue || '';
-                const allowedVals = allowedStr ? allowedStr.split(',').map(s => s.trim().toLowerCase()).filter(s => s) : null;
-                
                 const sortedVals = [...new Set(parentValArray)]
-                    .filter(v => {
-                        if (!allowedVals || allowedVals.length === 0) return true;
-                        return allowedVals.includes(String(v).trim().toLowerCase());
-                    })
                     .sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
 
                 if (sortedVals.length > 0) {
@@ -288,12 +281,19 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
                         const suffix = `_rep_${String(val).replace(/[^a-zA-Z0-9]/g, '')}`;
                         const labelSuffix = ` (${val})`;
                         currentGroup.fields.forEach(field => {
+                            const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
+                            const validRules = rules.filter(c => c && c.fieldId);
+                            
+                            // Check if field specifically restricts to certain floors
+                            const fieldAllowedStr = validRules.length > 0 ? String(validRules[0].value || '').trim().toLowerCase() : '';
+                            const fieldAllowedVals = fieldAllowedStr ? fieldAllowedStr.split(',').map(s => s.trim()).filter(s => s) : null;
+                            if (fieldAllowedVals && fieldAllowedVals.length > 0 && !fieldAllowedVals.includes(String(val).trim().toLowerCase())) {
+                                return; // This particular field shouldn't show for this floor
+                            }
+
                             const clonedField = { ...field };
                             clonedField.id = `${field.id}${suffix}`;
                             clonedField.label = `${field.label}${labelSuffix}`;
-                            
-                            const rules = field.conditions || (field.dependsOn ? [{ fieldId: field.dependsOn, value: field.dependsOnValue || '' }] : []);
-                            const validRules = rules.filter(c => c && c.fieldId);
                             
                             // Ensure the clone depends on specifically this option
                             if (validRules.length > 0) {
@@ -326,13 +326,12 @@ const computeEffectiveTemplate = (baseTemplate, currentValues) => {
 
             if (validRules.length === 1) {
                 const parentId = validRules[0].fieldId;
-                const valueStr = String(validRules[0].value || '').trim();
                 
-                if (currentGroup && currentGroup.parentId === parentId && currentGroup.allowValue === valueStr) {
+                if (currentGroup && currentGroup.parentId === parentId) {
                     currentGroup.fields.push(field);
                 } else {
                     flushGroup();
-                    currentGroup = { parentId, allowValue: valueStr, fields: [field] };
+                    currentGroup = { parentId, fields: [field] };
                 }
             } else {
                 flushGroup();
