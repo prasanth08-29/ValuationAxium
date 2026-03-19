@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Calendar, Building2, FileText, ChevronRight, Download, Eye, AlertCircle } from 'lucide-react';
+import { Search, Filter, Calendar, Building2, FileText, ChevronRight, Download, Eye, AlertCircle, Trash2 } from 'lucide-react';
 
 export default function Reports() {
     const navigate = useNavigate();
@@ -69,6 +69,26 @@ export default function Reports() {
             alert('Failed to export document');
         } finally {
             setExportingId(null);
+        }
+    };
+
+    const handleDeleteReport = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this valuation report? This cannot be undone.")) return;
+        
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/reports/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                setReports(prev => prev.filter(r => r.id !== id && r._id !== id));
+            } else {
+                alert("Failed to delete report.");
+            }
+        } catch (err) {
+            console.error("Failed to delete report", err);
+            alert("Failed to delete report.");
         }
     };
 
@@ -268,6 +288,13 @@ export default function Reports() {
                                                     ) : (
                                                         <Download className="w-5 h-5" />
                                                     )}
+                                                </button>
+                                                <button
+                                                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete Report"
+                                                    onClick={() => handleDeleteReport(report.id || report._id)}
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </td>
